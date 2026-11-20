@@ -1,4 +1,6 @@
-# CODE LEGACY: FROM ZERO TO LEGEND (V2 FULL CAREER)
+# du-an-game-it-bgh
+
+## CODE LEGACY: FROM ZERO TO LEGEND (V2 FULL CAREER)
 **Thể loại:** Career RPG · Life Simulation · Tech Open World · Programming Sandbox  
 **Nền tảng:** Web chạy trực tiếp trên mọi trình duyệt (Chrome, Edge, Firefox, Brave, Safari)  
 
