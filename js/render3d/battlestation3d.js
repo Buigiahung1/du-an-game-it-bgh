@@ -234,7 +234,7 @@ export class Battlestation3D {
     this.container.innerHTML = `
       <div class="w-full h-full flex flex-col items-center justify-center bg-slate-900/90 rounded-lg p-4 border border-cyan-500/30 text-center">
         <div class="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 text-2xl mb-2">
-          💻
+          [TECH]
         </div>
         <div class="text-sm font-bold text-cyan-300">BATTLESTATION GÓC LÀM VIỆC</div>
         <p class="text-xs text-slate-400 mt-1 max-w-xs">Phòng trọ sinh viên 12m² · Laptop Cũ · Bàn gỗ sinh viên</p>

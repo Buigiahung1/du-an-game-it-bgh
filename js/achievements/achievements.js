@@ -1,4 +1,6 @@
 // Master Achievements & Trophies Database
+// Professional technical milestones for the software engineering career path.
+
 import { state } from '../engine/state.js';
 import { audio } from '../engine/audio.js';
 import { StatsManager } from '../character/stats.js';
@@ -9,7 +11,7 @@ export const ACHIEVEMENTS = [
     title: 'Hello World',
     desc: 'Thực hiện phiên tự luyện code đầu tiên trong đời.',
     category: 'learning',
-    icon: '💻',
+    icon: '01',
     rewardExp: 50,
     check: (d) => d.character.exp > 0
   },
@@ -18,7 +20,7 @@ export const ACHIEVEMENTS = [
     title: 'Bàn Tay Khéo Léo',
     desc: 'Kiếm được tiền từ hợp đồng freelance đầu tiên.',
     category: 'career',
-    icon: '💵',
+    icon: '02',
     rewardExp: 100,
     check: (d) => (d.freelanceCompletedCount || 0) >= 1
   },
@@ -27,7 +29,7 @@ export const ACHIEVEMENTS = [
     title: 'Gõ Phím Như Múa',
     desc: 'Sở hữu và trang bị bàn phím cơ đầu tiên.',
     category: 'hardware',
-    icon: '⌨️',
+    icon: '03',
     rewardExp: 80,
     check: (d) => d.equipped.keyboard && d.equipped.keyboard !== 'kb_membrane'
   },
@@ -36,7 +38,7 @@ export const ACHIEVEMENTS = [
     title: 'Thoát Kiếp Mất Gốc',
     desc: 'Đột phá lên Giai đoạn 2: The Developer chuyên nghiệp.',
     category: 'career',
-    icon: '🚀',
+    icon: '04',
     rewardExp: 200,
     check: (d) => d.character.stage >= 2
   },
@@ -45,7 +47,7 @@ export const ACHIEVEMENTS = [
     title: 'Dân Công Sở Chính Hiệu',
     desc: 'Vượt qua phỏng vấn và chính thức gia nhập một công ty công nghệ.',
     category: 'career',
-    icon: '🏢',
+    icon: '05',
     rewardExp: 250,
     check: (d) => d.company !== null
   },
@@ -54,7 +56,7 @@ export const ACHIEVEMENTS = [
     title: 'Ngôi Sao GitHub',
     desc: 'Xây dựng dự án cá nhân đạt trên 100 lượt Stars trên GitHub.',
     category: 'community',
-    icon: '⭐',
+    icon: '06',
     rewardExp: 300,
     check: (d) => (d.portfolioProjects || []).some(p => p.stars >= 100)
   },
@@ -63,7 +65,7 @@ export const ACHIEVEMENTS = [
     title: 'Tự Do Tài Chính Cơ Bản',
     desc: 'Tích lũy số dư tiền mặt vượt mốc $10,000.',
     category: 'economy',
-    icon: '💰',
+    icon: '07',
     rewardExp: 400,
     check: (d) => d.character.money >= 10000
   },
@@ -72,7 +74,7 @@ export const ACHIEVEMENTS = [
     title: 'Đế Chế Công Nghệ',
     desc: 'Thành lập công ty công nghệ của riêng bạn.',
     category: 'legend',
-    icon: '👑',
+    icon: '08',
     rewardExp: 1000,
     check: (d) => d.startup !== null
   }
@@ -98,9 +100,8 @@ export class AchievementManager {
       if (!d.unlockedAchievements) d.unlockedAchievements = [];
       d.unlockedAchievements.push(ach.id);
       StatsManager.addExp(ach.rewardExp);
-      state.log(`🏆 MỞ KHÓA THÀNH TỰU: "${ach.title}"! ${ach.desc} (+${ach.rewardExp} EXP)!`, 'success');
+      state.log(`[ACHIEVE] MỞ KHÓA THÀNH TỰU: "${ach.title}"! ${ach.desc} (+${ach.rewardExp} EXP)`, 'success');
     });
     audio.playLevelUp();
   }
 }
-

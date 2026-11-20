@@ -78,6 +78,9 @@ export class InterviewManager {
     const comp = COMPANIES[companyId];
     if (!comp) return { eligible: false, reason: 'Công ty không tồn tại' };
 
+    if (state.data.stats.energy < 20) {
+      return { eligible: false, reason: `Bạn quá kiệt sức để tham gia phỏng vấn! Cần tối thiểu 20 Năng lượng (Hiện tại: ${state.data.stats.energy}⚡)` };
+    }
     if (state.data.character.level < comp.minLevel) {
       return { eligible: false, reason: `Cần đạt Level tối thiểu ${comp.minLevel} (Hiện tại: Lv.${state.data.character.level})` };
     }
@@ -104,6 +107,7 @@ export class InterviewManager {
     const comp = COMPANIES[companyId];
     if (!comp) return;
 
+    StatsManager.consumeEnergy(20);
     const isPassed = (score / totalQuestions) >= 0.7;
 
     state.update(d => {
@@ -119,11 +123,12 @@ export class InterviewManager {
         d.character.rep += 50;
         StatsManager.addExp(500);
         audio.playLevelUp();
-        state.log(`🎉 CHÍNH THỨC NHẬN OFFER! Bạn đã vượt qua các vòng phỏng vấn xuất sắc và gia nhập ${comp.name}! Lương tháng: $${comp.monthlySalary.toLocaleString()}!`, 'success');
+        state.log(`[OFFER ACCEPTED] CHÍNH THỨC GIA NHẬP: Bạn đã vượt qua các vòng phỏng vấn xuất sắc và gia nhập ${comp.name}! Lương tháng: $${comp.monthlySalary.toLocaleString()} (-20⚡)!`, 'success');
       } else {
+        StatsManager.consumeEnergy(5);
         d.stats.mentalHealth = Math.max(15, d.stats.mentalHealth - 15);
         audio.playError();
-        state.log(`❌ Phỏng vấn chưa đạt yêu cầu tại ${comp.name}. Người phỏng vấn nhận xét bạn cần ôn luyện thêm kiến thức nền tảng!`, 'danger');
+        state.log(`[FAILED] Phỏng vấn chưa đạt yêu cầu tại ${comp.name}: Mất 25⚡ Năng lượng và 15 Tinh thần. Nhà tuyển dụng khuyên bạn cần ôn luyện thêm!`, 'danger');
       }
     });
 

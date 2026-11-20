@@ -1,6 +1,8 @@
 // 3D Humanoid Character Engine for CODE LEGACY
 // Realistic proportions matching Image 1: Korean/Asian IT Student, Hoodie, Jeans, Sneakers, Canvas Bag
 
+import { TextureGenerator } from './textureGenerator.js';
+
 export class Character3D {
   constructor(scene) {
     this.scene = scene;
@@ -109,6 +111,27 @@ export class Character3D {
     vneckMesh.position.set(0, 0.22, 0.122);
     spine.add(vneckMesh);
 
+    // Hoodie Drawstrings with Metallic Aglet Tips (Reference Image 1 & 2)
+    const stringMat = new THREE.MeshStandardMaterial({ color: 0x182438, roughness: 0.7 });
+    const agletMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.2 });
+    [-0.035, 0.035].forEach((x, i) => {
+      const dStr = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.16, 6), stringMat);
+      dStr.position.set(x, 0.15, 0.13);
+      dStr.rotation.z = (i === 0 ? 0.05 : -0.05);
+      spine.add(dStr);
+
+      const aglet = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.025, 6), agletMat);
+      aglet.position.set(x + (i === 0 ? 0.004 : -0.004), 0.065, 0.13);
+      spine.add(aglet);
+    });
+
+    // Cross-body Bag Brass Buckle
+    const buckleMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.8, roughness: 0.3 });
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.04, 0.015), buckleMat);
+    buckle.position.set(0.02, 0.22, 0.135);
+    buckle.rotation.z = -0.55;
+    spine.add(buckle);
+
     // Hoodie Pocket (Front pouch)
     const pocketGeo = new THREE.BoxGeometry(0.24, 0.12, 0.04);
     const pocketMesh = new THREE.Mesh(pocketGeo, hoodieMat);
@@ -150,6 +173,17 @@ export class Character3D {
     const headMesh = new THREE.Mesh(headGeo, skinMat);
     headMesh.castShadow = true;
     headGroup.add(headMesh);
+
+    // Expressive Detailed Human Face Plate (Eyes, Eyebrows, Nose, Lips)
+    const faceGeo = new THREE.PlaneGeometry(0.18, 0.20);
+    const faceMat = new THREE.MeshStandardMaterial({
+      map: TextureGenerator.createHumanFace(),
+      transparent: true,
+      roughness: 0.55
+    });
+    const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+    faceMesh.position.set(0, 0.01, 0.112);
+    headGroup.add(faceMesh);
 
     // Hair (Layered stylized locks matching Image 1)
     const hairCapGeo = new THREE.SphereGeometry(0.12, 14, 14);
@@ -434,3 +468,4 @@ export class Character3D {
     this.limbs.rightArm.elbow.rotation.x = -0.8 + Math.cos(this.animTime * 1.2) * 0.06;
   }
 }
+

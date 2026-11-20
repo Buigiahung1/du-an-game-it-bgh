@@ -10,7 +10,7 @@ export class LifeManager {
       d.stats.energy = d.stats.maxEnergy;
       d.stats.mentalHealth = Math.min(100, d.stats.mentalHealth + 25);
       d.stats.focus = Math.min(100, d.stats.focus + 15);
-      state.log(`💤 Bạn đã ngủ một giấc thật sâu 8 tiếng. Tỉnh dậy với 100% Năng lượng và đầu óc tỉnh táo!`, 'success');
+      state.log(` Bạn đã ngủ một giấc thật sâu 8 tiếng. Tỉnh dậy với 100% Năng lượng và đầu óc tỉnh táo!`, 'success');
     });
     timeManager.advanceMinutes(480); // 8 hours
   }
@@ -24,7 +24,7 @@ export class LifeManager {
     state.update(d => {
       d.stats.energy = Math.min(d.stats.maxEnergy, d.stats.energy + 20);
       d.stats.focus = Math.min(100, d.stats.focus + 10);
-      state.log(`☕ Chợp mắt 30 phút. Năng lượng hồi phục +20.`, 'info');
+      state.log(` Chợp mắt 30 phút. Năng lượng hồi phục +20.`, 'info');
     });
     timeManager.advanceMinutes(30);
   }
@@ -32,7 +32,7 @@ export class LifeManager {
   static workoutGym() {
     if (state.data.stats.energy < 25) {
       audio.playError();
-      state.log(`⚠️ Bạn quá kiệt sức để tập thể dục!`, 'warning');
+      state.log(`[WARN] Bạn quá kiệt sức để tập thể dục!`, 'warning');
       return;
     }
     audio.playSuccess();
@@ -42,7 +42,7 @@ export class LifeManager {
       d.stats.maxEnergy = Math.min(130, d.stats.maxEnergy + 1); // Permanently expands stamina capacity
       d.stats.mentalHealth = Math.min(100, d.stats.mentalHealth + 12);
       d.stats.discipline = Math.min(100, d.stats.discipline + 2);
-      state.log(`🏃‍♂️ Chạy bộ & tập thể hình 1 tiếng. Sức khỏe thể chất tăng cao, cột sống được giải tỏa!`, 'success');
+      state.log(`‍♂️ Chạy bộ & tập thể hình 1 tiếng. Sức khỏe thể chất tăng cao, cột sống được giải tỏa!`, 'success');
     });
     timeManager.advanceMinutes(60);
   }
@@ -59,7 +59,7 @@ export class LifeManager {
       d.character.money -= cost;
       d.stats.health = Math.min(100, d.stats.health + 8);
       d.stats.energy = Math.min(d.stats.maxEnergy, d.stats.energy + 15);
-      state.log(`🍱 Thưởng thức bữa ăn dinh dưỡng (cơm gà, rau xanh, nước ép). Cơ thể tràn đầy sức sống!`, 'success');
+      state.log(` Thưởng thức bữa ăn dinh dưỡng (cơm gà, rau xanh, nước ép). Cơ thể tràn đầy sức sống!`, 'success');
     });
     timeManager.advanceMinutes(45);
   }
@@ -69,7 +69,7 @@ export class LifeManager {
     state.update(d => {
       d.stats.mentalHealth = Math.min(100, d.stats.mentalHealth + 15);
       d.stats.focus = Math.min(100, d.stats.focus + 20);
-      state.log(`🧘 Thiền định & nghe nhạc Lofi 45 phút. Giảm stress, tâm trí phẳng lặng như mặt hồ.`, 'info');
+      state.log(` Thiền định & nghe nhạc Lofi 45 phút. Giảm stress, tâm trí phẳng lặng như mặt hồ.`, 'info');
     });
     timeManager.advanceMinutes(45);
   }

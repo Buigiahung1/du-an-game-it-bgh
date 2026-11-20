@@ -1,8 +1,9 @@
 // Master 3D Game Engine for CODE LEGACY
-// Integrates Fullscreen WebGL 3D, Character Controller, Room Environment, Third-person Camera, Triggers, and Audio Footsteps
+// Integrates Fullscreen WebGL 3D, Character Controller, Dorm Bedroom, University Campus, NPC Interaction, and Audio Engine
 
 import { Character3D } from './character.js';
 import { Bedroom3D } from './bedroom.js';
+import { Campus3D } from './campus.js';
 import { NPC3D } from './npc.js';
 import { ThirdPersonCamera } from './cameraController.js';
 import { state } from '../engine/state.js';
@@ -21,8 +22,12 @@ export class Game3D {
 
     this.player = null;
     this.bedroom = null;
+    this.campus = null;
     this.npc = null;
     this.tpCamera = null;
+
+    // Current Scene Tracker ('bedroom' | 'campus')
+    this.currentSceneId = 'bedroom';
 
     // Input state
     this.keys = {
@@ -59,7 +64,7 @@ export class Game3D {
     this.scene.fog = new THREE.FogExp2(0x070b14, 0.04);
 
     // 2. Camera
-    this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 100);
+    this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 120);
     this.camera.position.set(0, 2.5, 4.0);
 
     // 3. Renderer
@@ -73,16 +78,17 @@ export class Game3D {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.1;
+    this.renderer.toneMappingExposure = 1.15;
 
-    // 4. Build Environment & World
+    // 4. Build Environments (Dorm Bedroom & University Campus)
     this.bedroom = new Bedroom3D(this.scene);
+    this.campus = new Campus3D(this.scene);
 
     // 5. Build Player Character (Starts in middle of room)
     this.player = new Character3D(this.scene);
     this.player.position.set(0, 0, 0.4);
 
-    // 6. Build NPC (Minh Mentor standing near hallway)
+    // 6. Build NPC (Minh Mentor standing near hallway in bedroom)
     this.npc = new NPC3D(this.scene, {
       id: "mentor_minh",
       name: "Minh Mentor",
@@ -94,7 +100,7 @@ export class Game3D {
     // 7. Third-Person Follow Camera
     this.tpCamera = new ThirdPersonCamera(this.camera, this.player.mesh);
 
-    // 8. Event Listeners (Keyboard & Window Resize)
+    // 8. Event Listeners
     this.setupKeyboardInput();
     window.addEventListener('resize', () => this.onWindowResize());
 
@@ -102,7 +108,7 @@ export class Game3D {
     this.isRunning = true;
     this.animate();
 
-    console.log("🎮 3D RPG Game Engine Initialized Successfully!");
+    console.log(" 3D RPG Game Engine Initialized Successfully with Bedroom & Campus Quad!");
   }
 
   setupKeyboardInput() {
@@ -178,10 +184,10 @@ export class Game3D {
 
     switch (this.activeTrigger.action) {
       case 'open_pc':
-        // Sit at desk and open programming academy & projects
+        // Sit at desk and open programming academy & challenges
         this.player.setSitting(true, new THREE.Vector3(-1.7, 0, -0.6), Math.PI);
         ui.switchTab('skills');
-        state.log("💻 Đang ngồi tại bàn máy tính Battlestation. Hãy chọn bài toán để giải hoặc code dự án!", "info");
+        state.log("[TECH] Đang ngồi tại bàn máy tính Battlestation. Hãy mở Đấu trường thử thách để giải quyết bài toán đầu tiên!", "info");
         break;
 
       case 'sleep':
@@ -192,20 +198,71 @@ export class Game3D {
       case 'read_book':
         // Open library / shop books
         ui.switchTab('shop');
-        state.log("📖 Mở tủ sách công nghệ: Chọn sách để đọc và tích lũy EXP!", "info");
+        state.log(" Mở tủ sách công nghệ: Chọn sách để đọc và tích lũy EXP!", "info");
         break;
 
       case 'talk_npc':
-        // Open NPC dialogue modal
-        ui.switchTab('overview');
-        state.log("💬 Đang đối thoại cùng Minh Mentor...", "info");
+        // Open dedicated interactive dialogue window with Mentor Minh
+        ui.openDialogueModal('mentor_minh');
         break;
 
       case 'exit_room':
-        // Show campus exploration
-        ui.switchTab('quests');
-        state.log("🏛️ Bước ra khuôn viên trường Đại học (Campus). Lộ trình 10 chương rộng mở!", "success");
+        // Seamless transition to University Campus outdoor plaza
+        this.switchScene('campus');
         break;
+
+      case 'enter_bedroom':
+        // Return back to bedroom dorm
+        this.switchScene('bedroom');
+        break;
+
+      case 'open_lab':
+        // Faculty of Computer Science Lab
+        ui.switchTab('skills');
+        state.log("️ Đang trong Phòng Lab Máy Tính Khoa CNTT. Luyện code và thi bài tập lớn!", "info");
+        break;
+
+      case 'open_library':
+        // University Central Library
+        ui.switchTab('shop');
+        state.log(" Đang ở Thư Viện Đại Học: Mở kho giáo trình cấu trúc dữ liệu và giải thuật!", "info");
+        break;
+    }
+  }
+
+  switchScene(targetScene) {
+    if (targetScene === 'campus') {
+      this.currentSceneId = 'campus';
+      this.bedroom.roomGroup.visible = false;
+      this.campus.setVisible(true);
+
+      // Reposition Player & Mentor Minh at Campus entrance
+      this.player.position.set(0, 0, -21.0);
+      this.player.rotationY = 0;
+      this.npc.mesh.position.set(2.2, 0, -18.5);
+
+      // Change background sky to sunny golden autumn
+      this.scene.background.setHex(0xbfe3f7);
+      this.scene.fog.color.setHex(0xe0f2fe);
+      this.scene.fog.density = 0.012;
+
+      state.log("️ Bạn đã bước ra khuôn viên Đại Học Công Nghệ. Hàng cây phong mùa thu rợp bóng mát! Hãy tiến về Lab Máy Tính hoặc Thư Viện.", "success");
+    } else {
+      this.currentSceneId = 'bedroom';
+      this.campus.setVisible(false);
+      this.bedroom.roomGroup.visible = true;
+
+      // Reposition Player & Mentor Minh in Dorm
+      this.player.position.set(-0.2, 0, 1.8);
+      this.player.rotationY = Math.PI;
+      this.npc.mesh.position.set(0.6, 0, 1.7);
+
+      // Change background to cozy room interior tone
+      this.scene.background.setHex(0x070b14);
+      this.scene.fog.color.setHex(0x070b14);
+      this.scene.fog.density = 0.04;
+
+      state.log(" Bạn đã trở về góc làm việc phòng trọ thân thuộc.", "info");
     }
   }
 
@@ -215,12 +272,18 @@ export class Game3D {
     }
     // Close any open modal
     document.querySelectorAll('.fixed.inset-0').forEach(m => m.classList.add('hidden'));
+    const dialogueModal = document.getElementById('dialogue-modal');
+    if (dialogueModal) dialogueModal.classList.add('hidden');
   }
 
   checkTriggers() {
     const playerPos = this.player.position;
+    const currentSceneTriggers = this.currentSceneId === 'campus'
+      ? this.campus.getTriggers()
+      : this.bedroom.getTriggers();
+
     const allTriggers = [
-      ...this.bedroom.getTriggers(),
+      ...currentSceneTriggers,
       this.npc.getTrigger()
     ];
 
@@ -264,15 +327,22 @@ export class Game3D {
       this.keys.cameraYaw = this.tpCamera.getYaw();
     }
 
-    // 2. Update Player Movement & Collisions
-    const collisionBoxes = this.bedroom.getCollisionBoxes();
+    // 2. Update Player Movement & Collisions based on current active scene
+    const collisionBoxes = this.currentSceneId === 'campus'
+      ? this.campus.getCollisionBoxes()
+      : this.bedroom.getCollisionBoxes();
+
     this.player.update(delta, this.keys, collisionBoxes);
 
     // 3. Update Camera follow
     this.tpCamera.update(delta);
 
     // 4. Update Environment & NPC
-    this.bedroom.update(delta);
+    if (this.currentSceneId === 'campus') {
+      this.campus.update(delta);
+    } else {
+      this.bedroom.update(delta);
+    }
     this.npc.update(delta, this.player.position);
 
     // 5. Check Proximity Interaction Triggers

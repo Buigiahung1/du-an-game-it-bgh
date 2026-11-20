@@ -67,7 +67,7 @@ export class PortfolioManager {
     const existing = (state.data.portfolioProjects || []).find(p => p.id === templateId);
     if (existing) {
       audio.playError();
-      state.log(`⚠️ Bạn đã hoàn thành và deploy dự án "${template.name}" trước đó rồi!`, 'warning');
+      state.log(`[WARN] Bạn đã hoàn thành và deploy dự án "${template.name}" trước đó rồi!`, 'warning');
       return false;
     }
 
@@ -84,7 +84,7 @@ export class PortfolioManager {
     // Check energy
     if (state.data.stats.energy < template.energyCost) {
       audio.playError();
-      state.log(`⚠️ Quá kiệt sức để code dự án! Cần ít nhất ${template.energyCost} Năng lượng.`, 'warning');
+      state.log(`[WARN] Quá kiệt sức để code dự án! Cần ít nhất ${template.energyCost} Năng lượng.`, 'warning');
       return false;
     }
 
@@ -112,7 +112,7 @@ export class PortfolioManager {
       d.character.rep += template.repBonus;
       StatsManager.addExp(template.energyCost * 4);
       audio.playSuccess();
-      state.log(`🚀 DEPLOY THÀNH CÔNG: "${template.name}"! Dự án đạt ${stars} Stars trên GitHub và ${users} người dùng thật! +${template.repBonus} REP!`, 'success');
+      state.log(`[LAUNCH] DEPLOY THÀNH CÔNG: "${template.name}"! Dự án đạt ${stars} Stars trên GitHub và ${users} người dùng thật! +${template.repBonus} REP!`, 'success');
     });
 
     return true;

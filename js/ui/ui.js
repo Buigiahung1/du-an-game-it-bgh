@@ -51,14 +51,7 @@ export class UIManager {
     this.currentTab = tabId;
     const menuModal = document.getElementById('game-menu-modal');
 
-    if (tabId === 'overview') {
-      if (menuModal) menuModal.classList.add('hidden');
-      if (window.game3D && window.game3D.player && window.game3D.player.isSitting) {
-        window.game3D.player.setSitting(false);
-      }
-    } else {
-      if (menuModal) menuModal.classList.remove('hidden');
-    }
+    if (menuModal) menuModal.classList.remove('hidden');
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
@@ -72,7 +65,7 @@ export class UIManager {
   toggleMenuModal(tabId) {
     const modal = document.getElementById('game-menu-modal');
     if (!modal) return;
-    
+
     if (tabId) {
       this.switchTab(tabId);
     } else {
@@ -216,10 +209,9 @@ export class UIManager {
         const isUnlocked = state.data.character.stage >= opt.stageMin;
         const isCurrent = state.data.character.avatar === opt.id;
         return `
-          <button class="px-3 py-1.5 text-xs rounded border transition-all ${
-            isCurrent ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold' :
+          <button class="px-3 py-1.5 text-xs rounded border transition-all ${isCurrent ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold' :
             isUnlocked ? 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500' :
-            'opacity-40 bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
+              'opacity-40 bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
           }" data-avatar-id="${opt.id}" ${!isUnlocked ? 'disabled' : ''}>
             ${opt.label} ${!isUnlocked ? `(Mở khóa Giai đoạn ${opt.stageMin})` : ''}
           </button>
@@ -252,7 +244,7 @@ export class UIManager {
             <div class="flex flex-col gap-1.5">
               ${d.options.map(opt => `
                 <button class="text-left p-2 rounded bg-slate-950/80 border border-slate-800 hover:border-cyan-500 text-[11px] text-cyan-300 transition-all npc-opt-btn" data-npc="${npc.id}">
-                  👉 ${opt.text}
+                   ${opt.text}
                 </button>
               `).join('')}
             </div>
@@ -267,6 +259,8 @@ export class UIManager {
         });
       });
     }
+
+    this.renderInventory();
   }
 
   renderSkillsTab() {
@@ -323,7 +317,7 @@ export class UIManager {
               <p class="text-xs text-slate-400 line-clamp-2">${c.question}</p>
             </div>
             <button class="mt-4 w-full py-1.5 rounded text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/50 text-purple-200 transition-all open-challenge-btn" data-chal-id="${c.id}">
-              🧠 Vào Làm Thử Thách
+              [EXEC] Thử Thách Kỹ Thuật
             </button>
           </div>
         `;
@@ -348,20 +342,18 @@ export class UIManager {
         const isLocked = ch.number > currentCh;
 
         return `
-          <div class="p-3.5 rounded-xl border transition-all ${
-            isCurrent ? 'bg-cyan-950/40 border-cyan-400 shadow-lg shadow-cyan-500/10' :
+          <div class="p-3.5 rounded-xl border transition-all ${isCurrent ? 'bg-cyan-950/40 border-cyan-400 shadow-lg shadow-cyan-500/10' :
             isPassed ? 'bg-slate-900/40 border-emerald-500/40 opacity-80' :
-            'bg-slate-950/40 border-slate-800/80 opacity-50'
+              'bg-slate-950/40 border-slate-800/80 opacity-50'
           }">
             <div class="flex justify-between items-center mb-1">
               <span class="text-xs font-bold font-mono ${isCurrent ? 'text-cyan-300' : isPassed ? 'text-emerald-400' : 'text-slate-500'}">
                 CHƯƠNG ${ch.number}
               </span>
-              <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                isCurrent ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-800' :
-                isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-800' :
-                'bg-slate-800 text-slate-500'
-              }">
+              <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${isCurrent ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-800' :
+            isPassed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-800' :
+              'bg-slate-800 text-slate-500'
+          }">
                 ${isCurrent ? 'Đang Thực Hiện' : isPassed ? 'Đã Hoàn Thành' : 'Chưa Mở Khóa'}
               </span>
             </div>
@@ -388,7 +380,7 @@ export class UIManager {
             <div class="flex justify-between items-start mb-2">
               <div>
                 <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ${q.category === 'boss' ? 'bg-amber-500/20 text-amber-300 border border-amber-500' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-800'}">
-                  ${q.category === 'boss' ? '🔥 BOSS THỬ THÁCH' : 'NHIỆM VỤ CHÍNH'}
+                  ${q.category === 'boss' ? '[BOSS] Thử Thách Trọng Điểm' : '[MISSION] Nhiệm Vụ Chính'}
                 </span>
                 <h4 class="text-base font-bold text-slate-100 mt-1">${q.title}</h4>
                 <div class="text-xs text-slate-400 italic">Người giao: <span class="text-slate-200">${q.giver}</span></div>
@@ -458,7 +450,7 @@ export class UIManager {
       } else {
         statusBox.innerHTML = `
           <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-            <span class="text-2xl block mb-1">👔</span>
+            <span class="text-2xl block mb-1"></span>
             <div class="text-sm font-bold text-slate-200">Bạn đang là Lập trình viên tự do (Chưa vào công ty)</div>
             <p class="text-xs text-slate-400 mt-1">Hãy tích lũy kinh nghiệm, nâng cao kỹ năng và nộp hồ sơ phỏng vấn tại các tập đoàn dưới đây.</p>
           </div>
@@ -491,11 +483,10 @@ export class UIManager {
                 <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">REP: ${c.minRep}</span>
               </div>
             </div>
-            <button class="mt-4 w-full py-2 rounded text-xs font-bold transition-all ${
-              check.eligible ? 'bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 apply-company-btn' :
-              'bg-slate-950 border border-slate-800 text-slate-500 cursor-not-allowed'
-            }" data-comp-id="${c.id}" ${!check.eligible ? 'disabled' : ''}>
-              ${check.eligible ? '📝 Nộp CV & Phỏng Vấn Trực Tiếp' : `Chưa Đạt Yêu Cầu (${check.reason})`}
+            <button class="mt-4 w-full py-2 rounded text-xs font-bold transition-all ${check.eligible ? 'bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 apply-company-btn' :
+            'bg-slate-950 border border-slate-800 text-slate-500 cursor-not-allowed'
+          }" data-comp-id="${c.id}" ${!check.eligible ? 'disabled' : ''}>
+              ${check.eligible ? ' Nộp CV & Phỏng Vấn Trực Tiếp' : `Chưa Đạt Yêu Cầu (${check.reason})`}
             </button>
           </div>
         `;
@@ -536,12 +527,12 @@ export class UIManager {
             ${isBuilt ? `
               <div class="p-2.5 rounded bg-emerald-950/40 border border-emerald-600/50 text-xs text-emerald-300 font-mono flex justify-between items-center">
                 <span>⭐ ${isBuilt.stars} Stars</span>
-                <span>👥 ${isBuilt.users} Users</span>
+                <span> ${isBuilt.users} Users</span>
                 <span class="text-emerald-400 font-bold">ONLINE</span>
               </div>
             ` : `
               <button class="w-full py-2 rounded text-xs font-bold bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 transition-all build-project-btn" data-tpl-id="${tpl.id}">
-                💻 Lập Trình & Deploy Lên Production
+                [TECH] Lập Trình & Deploy Lên Production
               </button>
             `}
           </div>
@@ -564,7 +555,7 @@ export class UIManager {
     if (!s) {
       startupBox.innerHTML = `
         <div class="glass-panel p-6 rounded-2xl border border-slate-800 text-center max-w-xl mx-auto">
-          <span class="text-4xl block mb-2">🚀</span>
+          <span class="text-4xl block mb-2">[LAUNCH]</span>
           <h3 class="text-base font-extrabold text-white">Khởi Nghiệp Doanh Nghiệp Công Nghệ</h3>
           <p class="text-xs text-slate-400 mt-1 mb-4">
             Bước ra khỏi vùng an toàn làm thuê để sáng lập công ty của chính bạn. Yêu cầu vốn khởi điểm tối thiểu $10,000 tiền mặt.
@@ -634,7 +625,7 @@ export class UIManager {
                 <span class="text-cyan-300 font-bold">${s.productProgress}%</span>
               </div>
               <button id="btn-pitch-vc" class="mt-4 w-full py-2 rounded text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500 text-amber-300 transition-all">
-                💎 Thuyết Trình Gọi Vốn Series A ($1.5M)
+                [VAL] Thuyết Trình Gọi Vốn Series A ($1.5M)
               </button>
             </div>
 
@@ -697,15 +688,14 @@ export class UIManager {
             <div class="mt-3 flex gap-3 text-xs font-mono">
               <span class="text-cyan-400">⚡ Tiêu hao: ${g.energyCost} Năng lượng</span>
               <span class="${isEligible ? 'text-emerald-400' : 'text-rose-400'}">
-                🎯 Yêu cầu: ${g.requiredSkill.toUpperCase()} Lv.${g.requiredLevel} (Hiện có: Lv.${playerLevel})
+                [TARGET] Yêu cầu: ${g.requiredSkill.toUpperCase()} Lv.${g.requiredLevel} (Hiện có: Lv.${playerLevel})
               </span>
             </div>
           </div>
-          <button class="mt-4 w-full py-2 rounded text-xs font-bold transition-all ${
-            isEligible ? 'bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-200 accept-gig-btn' :
-            'bg-slate-800/40 border border-slate-800 text-slate-500 cursor-not-allowed'
-          }" data-gig-id="${g.id}" ${!isEligible ? 'disabled' : ''}>
-            ${isEligible ? '💼 Nhận Hợp Đồng & Triển Khai Ngay' : 'Kỹ Năng Chưa Đạt Yêu Cầu'}
+          <button class="mt-4 w-full py-2 rounded text-xs font-bold transition-all ${isEligible ? 'bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-200 accept-gig-btn' :
+          'bg-slate-800/40 border border-slate-800 text-slate-500 cursor-not-allowed'
+        }" data-gig-id="${g.id}" ${!isEligible ? 'disabled' : ''}>
+            ${isEligible ? ' Nhận Hợp Đồng & Triển Khai Ngay' : 'Kỹ Năng Chưa Đạt Yêu Cầu'}
           </button>
         </div>
       `;
@@ -725,10 +715,11 @@ export class UIManager {
 
     listEl.innerHTML = items.map(item => {
       const isEquipped = Object.values(state.data.equipped).includes(item.id);
-      const isConsumable = item.category === 'consumable' || item.category === 'book';
+      const isConsumable = item.category === 'consumable';
+      const isBook = item.category === 'book';
 
       return `
-        <div class="p-4 rounded-lg bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between hover:border-cyan-500/40 transition-all">
           <div>
             <div class="flex justify-between items-start">
               <span class="text-[10px] px-2 py-0.5 rounded badge-${item.rarity} uppercase font-bold tracking-wider">
@@ -740,17 +731,31 @@ export class UIManager {
             </div>
             <h4 class="text-sm font-bold text-slate-100 mt-2">${item.name}</h4>
             <p class="text-xs text-slate-400 mt-1">${item.desc}</p>
+            ${isConsumable && item.effect ? `
+              <div class="mt-2 text-[11px] font-mono font-bold text-emerald-400">
+                [EFFECT] +${item.effect.energy || 0} Năng lượng ${item.effect.focus ? `· +${item.effect.focus} Focus` : ''}
+              </div>
+            ` : ''}
           </div>
           <div class="mt-4">
             ${isEquipped ? `
-              <div class="w-full py-1.5 text-center text-xs font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-800 rounded">
-                Đang Sử Dụng
+              <div class="w-full py-1.5 text-center text-xs font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-800 rounded font-mono">
+                [EQUIPPED] Đang Sử Dụng
               </div>
             ` : item.price === 0 ? `
-              <div class="w-full py-1.5 text-center text-xs text-slate-500">Đã sở hữu</div>
+              <div class="w-full py-1.5 text-center text-xs text-slate-500 font-mono">[OWNED] Đã sở hữu</div>
+            ` : isConsumable ? `
+              <div class="flex gap-2">
+                <button class="flex-1 py-1.5 rounded text-xs font-bold bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 transition-all buy-item-btn font-mono" data-item-id="${item.id}">
+                  [BUY] Mua Vào Túi ($${item.price})
+                </button>
+                <button class="flex-1 py-1.5 rounded text-xs font-bold bg-emerald-600/40 hover:bg-emerald-600/60 border border-emerald-500/60 text-emerald-200 transition-all buy-consume-btn font-mono" data-item-id="${item.id}">
+                  [FAST] Nạp Luôn ($${item.price})
+                </button>
+              </div>
             ` : `
-              <button class="w-full py-1.5 rounded text-xs font-bold bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 transition-all buy-item-btn" data-item-id="${item.id}">
-                ${isConsumable ? 'Mua Ngay' : 'Mua & Trang Bị'} ($${item.price})
+              <button class="w-full py-1.5 rounded text-xs font-bold bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/50 text-cyan-200 transition-all buy-item-btn font-mono" data-item-id="${item.id}">
+                [EQUIP] Mua & Trang Bị ($${item.price})
               </button>
             `}
           </div>
@@ -764,37 +769,67 @@ export class UIManager {
       });
     });
 
-    // Render inventory
-    const invEl = document.getElementById('inventory-list');
-    if (invEl) {
-      const inv = state.data.inventory;
-      if (inv.length === 0) {
-        invEl.innerHTML = `<div class="text-xs text-slate-500 p-2">Túi đồ rỗng.</div>`;
-      } else {
-        invEl.innerHTML = inv.map((itemId, idx) => {
-          const it = ITEMS[itemId] || { name: itemId, category: 'item' };
-          const isUsable = it.category === 'consumable' || it.category === 'book';
-          return `
-            <div class="flex items-center justify-between p-2 rounded bg-slate-950/70 border border-slate-800 text-xs">
-              <span class="text-slate-200">${it.name}</span>
-              ${isUsable ? `
-                <button class="px-2 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 use-item-btn" data-item-id="${itemId}" data-index="${idx}">
-                  Sử dụng
-                </button>
-              ` : `
-                <span class="text-[10px] text-slate-500">Vật phẩm</span>
-              `}
-            </div>
-          `;
-        }).join('');
+    listEl.querySelectorAll('.buy-consume-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        ShopManager.buyAndConsume(e.currentTarget.dataset.itemId);
+      });
+    });
 
-        invEl.querySelectorAll('.use-item-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            ShopManager.useConsumable(e.currentTarget.dataset.itemId, parseInt(e.currentTarget.dataset.index));
-          });
-        });
+    this.renderInventory();
+  }
+
+  renderInventory() {
+    const containers = [
+      document.getElementById('inventory-list'),
+      document.getElementById('shop-inventory-list')
+    ].filter(Boolean);
+
+    if (containers.length === 0) return;
+
+    const inv = state.data.inventory;
+
+    containers.forEach(container => {
+      if (inv.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 p-3 text-center bg-slate-950/60 rounded-lg border border-slate-900 font-mono">[INVENTORY EMPTY] Túi đồ rỗng. Mua cà phê lon hoặc đồ uống để nạp năng lượng!</div>`;
+        return;
       }
-    }
+
+      container.innerHTML = inv.map((itemId, idx) => {
+        const it = ITEMS[itemId] || { name: itemId, category: 'item' };
+        const isConsumable = it.category === 'consumable';
+        const isBook = it.category === 'book';
+        const effectDesc = isConsumable && it.effect ? `+${it.effect.energy || 0} Năng lượng` : isBook ? `+${it.expBonus} EXP` : 'Trang bị';
+
+        return `
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 hover:border-slate-700 text-xs transition-all">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-400 font-bold">${isConsumable ? '[ITEM]' : isBook ? '[BOOK]' : '[TECH]'}</span>
+              <div>
+                <span class="font-bold text-slate-100 block">${it.name}</span>
+                <span class="text-[10px] text-emerald-400 font-mono">${effectDesc}</span>
+              </div>
+            </div>
+            ${isConsumable ? `
+              <button class="px-3 py-1.5 rounded-lg bg-emerald-600/40 hover:bg-emerald-600/60 border border-emerald-500/60 text-emerald-200 font-bold text-xs flex items-center gap-1 transition-all use-item-btn shadow-md shadow-emerald-500/10 cursor-pointer font-mono" data-item-id="${itemId}" data-index="${idx}">
+                [EXEC] Sử Dụng (+${it.effect ? it.effect.energy || 0 : 0}⚡)
+              </button>
+            ` : isBook ? `
+              <button class="px-2.5 py-1 rounded bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/50 text-blue-300 font-semibold text-xs use-item-btn cursor-pointer font-mono" data-item-id="${itemId}" data-index="${idx}">
+                [STUDY] Đọc Sách
+              </button>
+            ` : `
+              <span class="text-[10px] text-slate-500 font-mono px-2 py-0.5 rounded bg-slate-900">[GEAR]</span>
+            `}
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('.use-item-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          ShopManager.useConsumable(e.currentTarget.dataset.itemId, parseInt(e.currentTarget.dataset.index));
+        });
+      });
+    });
   }
 
   renderAchievementsTab() {
@@ -805,14 +840,12 @@ export class UIManager {
     listEl.innerHTML = ACHIEVEMENTS.map(ach => {
       const isUnlocked = unlocked.includes(ach.id);
       return `
-        <div class="p-4 rounded-xl border flex items-center gap-3 transition-all ${
-          isUnlocked ? 'bg-cyan-950/30 border-cyan-400/60 shadow-lg shadow-cyan-500/10' :
+        <div class="p-4 rounded-xl border flex items-center gap-3 transition-all ${isUnlocked ? 'bg-cyan-950/30 border-cyan-400/60 shadow-lg shadow-cyan-500/10' :
           'bg-slate-950/40 border-slate-800/80 opacity-40'
         }">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-            isUnlocked ? 'bg-cyan-500/20 border border-cyan-400' : 'bg-slate-900 border border-slate-800'
-          }">
-            ${ach.icon}
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-mono font-extrabold text-xs ${isUnlocked ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400' : 'bg-slate-900 text-slate-600 border border-slate-800'
+        }">
+            [${ach.icon}]
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -848,8 +881,8 @@ export class UIManager {
     if (!listEl) return;
     listEl.innerHTML = state.data.logs.map(l => {
       const color = l.type === 'success' ? 'text-emerald-400' :
-                    l.type === 'danger' ? 'text-rose-400' :
-                    l.type === 'warning' ? 'text-amber-400' : 'text-slate-300';
+        l.type === 'danger' ? 'text-rose-400' :
+          l.type === 'warning' ? 'text-amber-400' : 'text-slate-300';
       return `
         <div class="text-xs font-mono py-1 border-b border-slate-900 flex gap-2">
           <span class="text-slate-500">[${l.time}]</span>
@@ -870,15 +903,30 @@ export class UIManager {
     const codeEl = document.getElementById('modal-chal-code');
     const optionsEl = document.getElementById('modal-chal-options');
     const feedbackEl = document.getElementById('modal-chal-feedback');
+    const energyEl = document.getElementById('modal-chal-user-energy');
+    const moneyEl = document.getElementById('modal-chal-user-money');
+    const alertEl = document.getElementById('modal-chal-lockout-alert');
 
     if (titleEl) titleEl.textContent = chal.title;
     if (qEl) qEl.textContent = chal.question;
     if (codeEl) codeEl.textContent = chal.codeSnippet;
     if (feedbackEl) feedbackEl.classList.add('hidden');
+    if (energyEl) energyEl.textContent = `${state.data.stats.energy} ⚡`;
+    if (moneyEl) moneyEl.textContent = `$${state.data.character.money}`;
+
+    const isExhausted = state.data.stats.energy < 8;
+    if (alertEl) {
+      if (isExhausted) {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `[WARN] <strong>CẠN KIỆT NĂNG LƯỢNG:</strong> Bạn chỉ còn ${state.data.stats.energy} ⚡ (Cần tối thiểu 8 ⚡ để chạy compiler). Hãy bấm phím <strong>[U]</strong> uống cà phê hoặc đi ngủ để tiếp tục!`;
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
 
     if (optionsEl) {
       optionsEl.innerHTML = chal.options.map(opt => `
-        <button class="w-full text-left p-3 rounded bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs text-slate-200 transition-all option-btn" data-opt-id="${opt.id}">
+        <button class="w-full text-left p-3 rounded bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs text-slate-200 transition-all option-btn ${isExhausted ? 'opacity-50 cursor-not-allowed' : ''}" data-opt-id="${opt.id}" ${isExhausted ? 'disabled' : ''}>
           <span class="font-bold text-cyan-400 mr-2">${opt.id}.</span> ${opt.text}
         </button>
       `).join('');
@@ -896,20 +944,232 @@ export class UIManager {
 
   submitChallengeAnswer(chosenOptId) {
     if (!this.activeChallenge) return;
-    const res = SkillTreeManager.submitChallenge(this.activeChallenge.id, chosenOptId);
+    const optionsEl = document.getElementById('modal-chal-options');
     const feedbackEl = document.getElementById('modal-chal-feedback');
+    const energyEl = document.getElementById('modal-chal-user-energy');
+    const moneyEl = document.getElementById('modal-chal-user-money');
+    const alertEl = document.getElementById('modal-chal-lockout-alert');
 
+    // Check energy upfront
+    if (state.data.stats.energy < 8) {
+      audio.playError();
+      if (alertEl) {
+        alertEl.classList.remove('hidden');
+        alertEl.innerHTML = `[WARN] <strong>CẠN KIỆT NĂNG LƯỢNG:</strong> Không đủ năng lượng chạy kiểm thử (còn ${state.data.stats.energy} ⚡). Hãy bấm <strong>[U]</strong> nạp cà phê!`;
+      }
+      return;
+    }
+
+    // Disable all options immediately to prevent spamming
+    if (optionsEl) {
+      optionsEl.querySelectorAll('.option-btn').forEach(b => {
+        b.disabled = true;
+        b.classList.add('opacity-50', 'cursor-not-allowed');
+      });
+    }
+
+    // Compiling simulation
     if (feedbackEl) {
       feedbackEl.classList.remove('hidden');
-      if (res.success) {
-        feedbackEl.className = 'p-3 rounded bg-emerald-950/80 border border-emerald-600 text-xs text-emerald-200 mt-4';
-        feedbackEl.innerHTML = `<strong>✅ Chính xác!</strong> ${res.explanation}`;
-        QuestEngine.checkQuestProgress('challenge_solved', { challengeId: this.activeChallenge.id });
-      } else {
-        feedbackEl.className = 'p-3 rounded bg-rose-950/80 border border-rose-600 text-xs text-rose-200 mt-4';
-        feedbackEl.innerHTML = `<strong>❌ Chưa đúng!</strong> ${res.explanation}`;
+      feedbackEl.className = 'p-3 rounded-xl bg-slate-950 border border-cyan-500/50 text-xs text-cyan-300 mt-4 shadow-lg';
+      feedbackEl.innerHTML = `
+        <div class="font-mono text-[11px] animate-pulse">
+          $ gcc -std=c11 -Wall -O2 solution.c -o solution && ./solution<br/>
+          [COMPILING] Đang biên dịch mã nguồn và chạy các test assertions...
+        </div>
+      `;
+    }
+
+    setTimeout(() => {
+      const res = SkillTreeManager.submitChallenge(this.activeChallenge.id, chosenOptId);
+
+      if (energyEl) energyEl.textContent = `${state.data.stats.energy} ⚡`;
+      if (moneyEl) moneyEl.textContent = `$${state.data.character.money}`;
+
+      if (feedbackEl) {
+        if (res.success) {
+          audio.playSuccess();
+          feedbackEl.className = 'p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500 text-xs text-emerald-200 mt-4 shadow-lg';
+          feedbackEl.innerHTML = `
+            <div class="font-mono text-[11px] text-emerald-400 mb-2 p-2 bg-black/60 rounded border border-emerald-800/80">
+              $ gcc -std=c11 -O2 solution.c -o solution && ./solution<br/>
+              [OK] Compiling test cases... Done (0.012s)<br/>
+              [OK] Test 1: Memory alignment check -> PASSED<br/>
+              [OK] Test 2: Standard output verification -> PASSED<br/>
+              &gt;&gt;&gt; HOÀN THÀNH TOÀN BỘ KIỂM THỬ THÀNH CÔNG! (+${res.rewardExp} EXP, -8⚡)
+            </div>
+            <strong>[PASSED] Kiểm thử thành công:</strong> ${res.explanation}
+          `;
+          QuestEngine.checkQuestProgress('challenge_solved', { challengeId: this.activeChallenge.id });
+          QuestEngine.checkQuestProgress('challenge', {});
+          if (alertEl) alertEl.classList.add('hidden');
+        } else {
+          feedbackEl.className = 'p-3.5 rounded-xl bg-rose-950/80 border border-rose-500 text-xs text-rose-200 mt-4 shadow-lg';
+          feedbackEl.innerHTML = `
+            <div class="font-mono text-[11px] text-rose-400 mb-2 p-2 bg-black/60 rounded border border-rose-800/80">
+              $ gcc -std=c11 -O2 solution.c -o solution && ./solution<br/>
+              [RUNTIME ERROR] Test assertion failed: Expected result mismatch.<br/>
+              [CRASH] Segmentation fault (core dumped) / Logic bug detected.<br/>
+              &gt;&gt;&gt; HÌNH PHẠT: -${res.penaltyEnergy}⚡ Năng lượng | -$${res.penaltyMoney} Phí Sandbox | -12 Tinh thần
+            </div>
+            <strong>[FAILED] Lỗi mã nguồn:</strong> ${res.explanation}
+          `;
+
+          // 4-second anti-brute force lockout
+          let countdown = 4;
+          if (alertEl) {
+            alertEl.classList.remove('hidden');
+            alertEl.innerHTML = `⏳ <strong>ĐANG ĐỌC TRACEBACK & GỠ LỖI:</strong> Vui lòng suy nghĩ kỹ nguyên nhân bug trước khi thử lại (${countdown}s)...`;
+          }
+
+          const lockTimer = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+              if (alertEl) alertEl.innerHTML = `⏳ <strong>ĐANG ĐỌC TRACEBACK & GỠ LỖI:</strong> Vui lòng suy nghĩ kỹ nguyên nhân bug trước khi thử lại (${countdown}s)...`;
+            } else {
+              clearInterval(lockTimer);
+              if (state.data.stats.energy >= 8) {
+                if (alertEl) alertEl.classList.add('hidden');
+                if (optionsEl) {
+                  optionsEl.querySelectorAll('.option-btn').forEach(b => {
+                    b.disabled = false;
+                    b.classList.remove('opacity-50', 'cursor-not-allowed');
+                  });
+                }
+              } else {
+                if (alertEl) {
+                  alertEl.classList.remove('hidden');
+                  alertEl.innerHTML = `[WARN] <strong>NĂNG LƯỢNG ĐÃ CẠN (${state.data.stats.energy} ⚡):</strong> Không thể tiếp tục chạy code. Hãy ấn <strong>[U]</strong> uống cà phê hoặc đi ngủ hồi phục!`;
+                }
+              }
+            }
+          }, 1000);
+        }
+      }
+    }, 400);
+  }
+
+  openDialogueModal(npcId) {
+    const modal = document.getElementById('dialogue-modal');
+    if (!modal) return;
+
+    const npc = NPCS[npcId] || {
+      name: 'Minh Mentor',
+      role: 'Senior Principal Engineer @ Nexus Cloud'
+    };
+
+    const nameEl = document.getElementById('dialogue-npc-name');
+    const roleEl = document.getElementById('dialogue-npc-role');
+    const speechEl = document.getElementById('dialogue-speech-text');
+    const optionsEl = document.getElementById('dialogue-options-container');
+
+    if (nameEl) nameEl.textContent = npc.name;
+    if (roleEl) roleEl.textContent = npc.role;
+
+    // Check active quest completion
+    const isQuest1Done = state.data.completedQuests && state.data.completedQuests.includes('quest_ch1_hello_world');
+
+    if (isQuest1Done) {
+      if (speechEl) {
+        speechEl.textContent = `“Làm tốt lắm Nam! Em đã tự tay hoàn thành bài toán lập trình đầu đời và thấu hiểu nguyên lý bộ nhớ. Thấy chưa, máy tính chỉ làm đúng những gì em bảo nó làm thôi. Giờ hãy bước ra khuôn viên Đại học hoặc mở bảng Freelance để bắt đầu kiếm những đồng tiền danh dự đầu tiên!”`;
+      }
+      if (optionsEl) {
+        optionsEl.innerHTML = `
+          <button class="text-left p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/50 hover:bg-cyan-900/80 text-xs text-cyan-200 font-semibold transition-all dlg-opt" data-action="explore_campus">
+            ️ “Em muốn bước ra khám phá khuôn viên trường Đại Học!” (+10 Danh tiếng)
+          </button>
+          <button class="text-left p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-400 text-xs text-slate-200 transition-all dlg-opt" data-action="freelance_advice">
+             “Anh có lời khuyên gì để nhận được hợp đồng Freelance đầu tiên không ạ?” (+5 Kỷ luật)
+          </button>
+          <button class="text-left p-2 rounded bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 hover:text-white transition-all dlg-opt" data-action="close">
+             “Cảm ơn anh Minh, em sẽ tiếp tục phấn đấu!” [Đóng đối thoại]
+          </button>
+        `;
+      }
+    } else {
+      if (speechEl) {
+        speechEl.textContent = `“Này Nam, ai trong ngành này cũng từng bắt đầu từ việc không biết gì cả. Đừng nhìn bạn bè rồi tự ti! Tối nay, hãy ngồi vào bàn máy tính Battlestation nhấn [E] để giải bài toán đầu tiên về C/C++ hoặc tự luyện tập 2 lần. Cứ bắt đầu đi em!”`;
+      }
+      if (optionsEl) {
+        optionsEl.innerHTML = `
+          <button class="text-left p-2.5 rounded-lg bg-cyan-950/70 border border-cyan-500/50 hover:bg-cyan-900/80 text-xs text-cyan-200 font-semibold transition-all dlg-opt" data-action="goto_desk">
+            [TECH] “Em hiểu rồi, em sẽ ra bàn máy tính mở bài tập giải ngay!” [Đến bàn máy tính]
+          </button>
+          <button class="text-left p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-400 text-xs text-slate-200 transition-all dlg-opt" data-action="pointer_wisdom">
+             “Tại sao con trỏ và quản lý bộ nhớ lại quan trọng đến thế ạ?” (+5 Trí tuệ)
+          </button>
+          <button class="text-left p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-400 text-xs text-slate-200 transition-all dlg-opt" data-action="career_roadmap">
+             “Lộ trình 10 chương sự nghiệp từ Junior lên Principal Engineer là gì ạ?” (+5 Danh tiếng)
+          </button>
+          <button class="text-left p-2 rounded bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 hover:text-white transition-all dlg-opt" data-action="close">
+             “Em cần suy nghĩ thêm một chút.” [Đóng đối thoại]
+          </button>
+        `;
       }
     }
+
+    // Attach click events to dialogue options
+    optionsEl.querySelectorAll('.dlg-opt').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const act = e.currentTarget.dataset.action;
+        this.handleDialogueChoice(act);
+      });
+    });
+
+    modal.classList.remove('hidden');
+    audio.playClick();
+  }
+
+  handleDialogueChoice(action) {
+    this.closeDialogueModal();
+    switch (action) {
+      case 'goto_desk':
+        if (window.game3D && window.game3D.player) {
+          window.game3D.player.setSitting(true, new THREE.Vector3(-1.7, 0, -0.6), Math.PI);
+        }
+        this.switchTab('skills');
+        state.log("[TECH] Bạn đã ngồi vào bàn máy tính. Hãy chọn bài toán để giải hoặc luyện code!", "info");
+        break;
+
+      case 'pointer_wisdom':
+        state.update(d => {
+          d.stats.intelligence = Math.min(100, d.stats.intelligence + 5);
+          d.stats.discipline = Math.min(100, d.stats.discipline + 5);
+        });
+        state.log(" Minh Mentor: 'Hiểu con trỏ là hiểu cách phần cứng và bộ nhớ RAM vận hành. Khi em làm chủ bộ nhớ, em làm chủ mọi ngôn ngữ!' (+5 Trí Tuệ, +5 Kỷ Luật)", "success");
+        break;
+
+      case 'career_roadmap':
+        state.update(d => {
+          d.character.rep += 5;
+        });
+        this.switchTab('quests');
+        state.log(" Minh Mentor: 'Hãy xem lộ trình 10 chương sự nghiệp. Mỗi giai đoạn là một nấc thang tôi luyện bản lĩnh!' (+5 REP)", "info");
+        break;
+
+      case 'explore_campus':
+        if (window.game3D) {
+          window.game3D.switchScene('campus');
+        }
+        break;
+
+      case 'freelance_advice':
+        state.update(d => {
+          d.stats.discipline = Math.min(100, d.stats.discipline + 5);
+        });
+        state.log(" Minh Mentor: 'Khách hàng không mua dòng code, họ mua giải pháp giải quyết vấn đề. Luôn giao đúng hạn và giao tiếp trung thực!' (+5 Kỷ Luật)", "success");
+        break;
+
+      case 'close':
+      default:
+        break;
+    }
+  }
+
+  closeDialogueModal() {
+    const modal = document.getElementById('dialogue-modal');
+    if (modal) modal.classList.add('hidden');
+    audio.playClick();
   }
 
   openInterviewModal(companyId) {
@@ -1023,6 +1283,12 @@ export class UIManager {
     if (closeMenu && menuModal) {
       closeMenu.onclick = () => this.closeMenuModal();
     }
+
+    const dlgModal = document.getElementById('dialogue-modal');
+    const closeDlg = document.getElementById('close-dialogue-modal');
+    if (closeDlg && dlgModal) {
+      closeDlg.onclick = () => this.closeDialogueModal();
+    }
   }
 
   showToast(msg, type = 'info') {
@@ -1031,8 +1297,8 @@ export class UIManager {
 
     const toast = document.createElement('div');
     const border = type === 'success' ? 'border-emerald-500 text-emerald-300' :
-                   type === 'danger' ? 'border-rose-500 text-rose-300' :
-                   type === 'warning' ? 'border-amber-500 text-amber-300' : 'border-cyan-500 text-cyan-300';
+      type === 'danger' ? 'border-rose-500 text-rose-300' :
+        type === 'warning' ? 'border-amber-500 text-amber-300' : 'border-cyan-500 text-cyan-300';
 
     toast.className = `toast-msg max-w-sm p-3 rounded-lg bg-slate-900/95 border ${border} shadow-xl backdrop-blur-md text-xs font-mono`;
     toast.textContent = msg;

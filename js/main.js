@@ -6,6 +6,7 @@ import { SaveManager } from './engine/save.js';
 import { ui } from './ui/ui.js';
 import { Game3D } from './3d/game3d.js';
 import { Customizer } from './character/customizer.js';
+import { ShopManager } from './economy/shop.js';
 
 let game3D = null;
 
@@ -42,7 +43,7 @@ function bootGame() {
     SaveManager.save();
   }, 30000);
 
-  state.log('🚀 CODE LEGACY 3D sẵn sàng! Nhấn [WASD] để di chuyển, [E] để tương tác máy tính, [K] xem kỹ năng!', 'success');
+  state.log('[LAUNCH] CODE LEGACY 3D sẵn sàng! Nhấn [WASD] để di chuyển, [E] để tương tác máy tính, [K] xem kỹ năng!', 'success');
 }
 
 if (document.readyState === 'loading') {
@@ -94,7 +95,7 @@ function setupControls() {
   if (audioBtn) {
     audioBtn.onclick = () => {
       audio.enabled = !audio.enabled;
-      audioBtn.textContent = audio.enabled ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+      audioBtn.textContent = audio.enabled ? 'AUDIO: BẬT' : 'AUDIO: TẮT';
       audioBtn.classList.toggle('text-cyan-400', audio.enabled);
       audioBtn.classList.toggle('text-slate-500', !audio.enabled);
       if (audio.enabled) audio.playClick();
@@ -110,11 +111,21 @@ function setupControls() {
     };
   }
 
+  const quickEnergyBtn = document.getElementById('btn-quick-energy');
+  if (quickEnergyBtn) {
+    quickEnergyBtn.onclick = () => {
+      ShopManager.quickConsumeEnergy();
+    };
+  }
+
   // RPG Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     switch (e.code) {
+      case 'KeyU': // Quick Drink Coffee / Recharge Energy
+        ShopManager.quickConsumeEnergy();
+        break;
       case 'KeyK': // Skills
         ui.toggleMenuModal('skills');
         break;

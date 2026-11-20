@@ -13,7 +13,7 @@ export class CareerManager {
     const oldCompany = state.data.company.name;
     state.update(d => {
       d.company = null;
-      state.log(`👋 Bạn đã nộp đơn từ chức tại ${oldCompany} để tìm kiếm thử thách mới.`, 'warning');
+      state.log(` Bạn đã nộp đơn từ chức tại ${oldCompany} để tìm kiếm thử thách mới.`, 'warning');
     });
     audio.playClick();
   }
@@ -26,7 +26,7 @@ export class CareerManager {
       d.character.money += comp.monthlySalary;
       d.character.rep += 10;
       audio.playCoin();
-      state.log(`💼 NHẬN LƯƠNG THÁNG: Công ty ${comp.name} đã chuyển khoản $${comp.monthlySalary.toLocaleString()}!`, 'success');
+      state.log(` NHẬN LƯƠNG THÁNG: Công ty ${comp.name} đã chuyển khoản $${comp.monthlySalary.toLocaleString()}!`, 'success');
     });
   }
 
@@ -41,7 +41,7 @@ export class CareerManager {
         d.company.monthlySalary = Math.floor(d.company.monthlySalary * 1.45);
         d.character.rep += 30;
         audio.playLevelUp();
-        state.log(`🎉 CHÚC MỪNG! Ban Giám Đốc ${comp.name} quyết định thăng chức cho bạn! Mức lương mới: $${d.company.monthlySalary}/tháng!`, 'success');
+        state.log(`[SUCCESS] CHÚC MỪNG: Ban Giám Đốc ${comp.name} quyết định thăng chức cho bạn! Mức lương mới: $${d.company.monthlySalary}/tháng!`, 'success');
       });
     }
   }

@@ -58,7 +58,7 @@ export class FreelanceManager {
 
     if (state.data.stats.energy < gig.energyCost) {
       audio.playError();
-      state.log(`⚠️ Bạn không đủ năng lượng để làm dự án này! Cần ${gig.energyCost} Năng lượng.`, 'warning');
+      state.log(`[WARN] Bạn không đủ năng lượng để làm dự án này! Cần ${gig.energyCost} Năng lượng.`, 'warning');
       return;
     }
 
@@ -92,13 +92,16 @@ export class FreelanceManager {
         StatsManager.addExp(Math.floor(gig.payout * 1.5));
         
         audio.playCoin();
-        state.log(`🎉 HOÀN THÀNH XUẤT SẮC DỰ ÁN: "${gig.title}"! Khách hàng ${gig.client} thanh toán $${gig.payout} và khen ngợi!`, 'success');
+        state.log(`[SUCCESS] HOÀN TẤT HỢP ĐỒNG: "${gig.title}"! Khách hàng ${gig.client} thanh toán $${gig.payout} và khen ngợi!`, 'success');
         
         QuestEngine.checkQuestProgress('freelance_done', { gigId });
       } else {
         d.stats.mentalHealth = Math.max(10, d.stats.mentalHealth - 15);
+        d.character.rep = Math.max(0, d.character.rep - 4);
+        const penaltyFee = Math.min(d.character.money, Math.floor(gig.payout * 0.25));
+        d.character.money -= penaltyFee;
         audio.playError();
-        state.log(`❌ DỰ ÁN BỊ LỖI! Client phàn nàn code còn bug, từ chối nghiệm thu. Bạn bị trừ 15 Sức khỏe tinh thần!`, 'danger');
+        state.log(`[FAILED] DỰ ÁN BỊ LỖI: Client phàn nàn code còn bug, từ chối nghiệm thu: Mất ${gig.energyCost}⚡ Năng lượng, phạt -$${penaltyFee} vi phạm hợp đồng, -4 REP và -15 Tinh thần!`, 'danger');
       }
     });
   }

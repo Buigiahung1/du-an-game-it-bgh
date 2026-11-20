@@ -62,35 +62,44 @@ export class QuestEngine {
       if (q.rewards.exp) StatsManager.addExp(q.rewards.exp);
       if (q.rewards.money) {
         d.character.money += q.rewards.money;
-        state.log(`💰 Thưởng nhiệm vụ: +$${q.rewards.money}!`, 'success');
+        state.log(`[REWARD] Thưởng hoàn thành nhiệm vụ: +$${q.rewards.money}`, 'success');
       }
       if (q.rewards.rep) {
         d.character.rep += q.rewards.rep;
-        state.log(`🌟 Danh tiếng tăng: +${q.rewards.rep} REP!`, 'info');
+        state.log(`[STATUS] Danh tiếng kỹ sư: +${q.rewards.rep} REP`, 'info');
       }
       if (q.rewards.item && ITEMS[q.rewards.item]) {
         d.inventory.push(q.rewards.item);
-        state.log(`🎁 Nhận vật phẩm thưởng: ${ITEMS[q.rewards.item].name}!`, 'success');
+        state.log(`[INVENTORY] Nhận trang bị phần cứng: ${ITEMS[q.rewards.item].name}`, 'success');
       }
 
-      // Check unlock next quests in chain
-      if (questId === 'quest_ch1_first_steps' && !d.activeQuests.includes('quest_ch1_earn_money')) {
+      // Check sequential quest unlocks
+      if (questId === 'quest_ch1_hello_world' && !d.activeQuests.includes('quest_ch1_valgrind_fix') && !d.completedQuests.includes('quest_ch1_valgrind_fix')) {
+        d.activeQuests.push('quest_ch1_valgrind_fix');
+        state.log(`[NEW MISSION] Mở khóa nhiệm vụ: "[INCIDENT RESPONSE] Điều tra lỗi bộ nhớ Use-After-Free"`, 'info');
+      } else if (questId === 'quest_ch1_valgrind_fix' && !d.activeQuests.includes('quest_ch1_first_steps') && !d.completedQuests.includes('quest_ch1_first_steps')) {
+        d.activeQuests.push('quest_ch1_first_steps');
+        state.log(`[NEW MISSION] Mở khóa nhiệm vụ: "[DEVOPS INFRASTRUCTURE] Kiểm soát phiên bản Git & CI/CD"`, 'info');
+      } else if (questId === 'quest_ch1_first_steps' && !d.activeQuests.includes('quest_ch1_earn_money') && !d.completedQuests.includes('quest_ch1_earn_money')) {
         d.activeQuests.push('quest_ch1_earn_money');
-        state.log(`📜 Mở khóa nhiệm vụ mới: "Kiếm Những Đồng Tiền Đầu Tiên"!`, 'info');
-      } else if (questId === 'quest_ch1_earn_money' && !d.activeQuests.includes('quest_ch1_exam_boss')) {
+        state.log(`[NEW MISSION] Mở khóa nhiệm vụ: "[PRODUCTION DEPLOYMENT] Nghiệm thu hợp đồng Freelance"`, 'info');
+      } else if (questId === 'quest_ch1_earn_money' && !d.activeQuests.includes('quest_ch1_sql_optimize') && !d.completedQuests.includes('quest_ch1_sql_optimize')) {
+        d.activeQuests.push('quest_ch1_sql_optimize');
+        state.log(`[NEW MISSION] Mở khóa nhiệm vụ: "[DATABASE TUNING] Tối ưu hóa truy vấn B-Tree"`, 'info');
+      } else if (questId === 'quest_ch1_sql_optimize' && !d.activeQuests.includes('quest_ch1_exam_boss') && !d.completedQuests.includes('quest_ch1_exam_boss')) {
         d.activeQuests.push('quest_ch1_exam_boss');
-        state.log(`🔥 MỞ KHÓA BOSS THỬ THÁCH: "Vượt Qua Kỳ Thi Học Kỳ"!`, 'warning');
+        state.log(`[BOSS MISSION] MỞ KHÓA THỬ THÁCH CHUNG KẾT KỲ I: "[BOSS CHALLENGE] Đột phá kỳ thi DSA"`, 'warning');
       }
 
       if (q.rewards.unlockChapter) {
         d.chapter.current = q.rewards.unlockChapter;
-        d.chapter.title = `Chương ${q.rewards.unlockChapter}: The Foundation (Xây dựng nền tảng)`;
-        state.log(`🎉 CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH CHƯƠNG 1 VÀ BƯỚC SANG CHƯƠNG 2!`, 'success');
+        d.chapter.title = `Chương ${q.rewards.unlockChapter}: The Foundation (Xây dựng nền tảng vững chắc)`;
+        state.log(`[MILESTONE] HOÀN THÀNH TOÀN DIỆN CHƯƠNG 1 -> CHUYỂN TIẾP SANG CHƯƠNG 2!`, 'success');
       }
     });
 
     audio.playSuccess();
-    state.log(`🎯 HOÀN THÀNH NHIỆM VỤ: "${q.title}"! ${q.dialogue.completion}`, 'success');
+    state.log(`[COMPLETE] NHIỆM VỤ HOÀN TẤT: "${q.title}". ${q.dialogue.completion}`, 'success');
   }
 }
 

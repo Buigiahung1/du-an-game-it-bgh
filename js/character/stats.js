@@ -32,7 +32,7 @@ export class StatsManager {
   static addExp(amount) {
     state.update(d => {
       d.character.exp += amount;
-      state.log(`✨ Nhận được +${amount} EXP nhân vật!`, 'success');
+      state.log(` Nhận được +${amount} EXP nhân vật!`, 'success');
 
       while (d.character.exp >= d.character.expNext) {
         d.character.exp -= d.character.expNext;
@@ -42,7 +42,7 @@ export class StatsManager {
         d.stats.focus = Math.min(100, d.stats.focus + 5);
         
         audio.playLevelUp();
-        state.log(`🎉 CHÚC MỪNG! Bạn đã thăng cấp Level ${d.character.level}! Trí tuệ và Tập trung gia tăng!`, 'success');
+        state.log(`[SUCCESS] CHÚC MỪNG: Bạn đã thăng cấp Level ${d.character.level}! Trí tuệ và Tập trung gia tăng!`, 'success');
         
         this.checkStagePromotion(d);
       }
@@ -75,7 +75,7 @@ export class StatsManager {
       d.character.stage = newStage;
       d.character.stageTitle = newTitle;
       audio.playLevelUp();
-      state.log(`🏆 BẠN ĐÃ TIẾN HÓA SANG GIAI ĐOẠN MỚI: ${newTitle}! Diện mạo và phong thái đã thay đổi!`, 'success');
+      state.log(`[ACHIEVE] BẠN ĐÃ TIẾN HÓA SANG GIAI ĐOẠN MỚI: ${newTitle}! Diện mạo và phong thái đã thay đổi!`, 'success');
     }
   }
 
@@ -97,7 +97,7 @@ export class StatsManager {
         d.stats.mentalHealth = Math.max(15, d.stats.mentalHealth - 20);
       });
       audio.playError();
-      state.log(`⚠️ CẢNH BÁO KIỆT SỨC: Bạn đã cạn kiệt năng lượng! Hãy nghỉ ngơi hoặc ngủ ngay nếu không muốn gục ngã!`, 'danger');
+      state.log(`[WARN] CẢNH BÁO KIỆT SỨC: Bạn đã cạn kiệt năng lượng! Hãy nghỉ ngơi hoặc ngủ ngay nếu không muốn gục ngã!`, 'danger');
     }
     return !exhausted;
   }

@@ -7,7 +7,7 @@ export const NPCS = {
     id: 'mentor_minh',
     name: 'Minh Mentor',
     role: 'Senior Principal Engineer @ Nexus Cloud',
-    avatar: '👨‍🏫',
+    avatar: '‍',
     dialogues: [
       {
         id: 'minh_advice_1',
@@ -30,7 +30,7 @@ export const NPCS = {
     id: 'rival_lam',
     name: 'Lâm Đối Thủ',
     role: 'Sinh viên trường chuyên & Quán quân thuật toán',
-    avatar: '😎',
+    avatar: '',
     dialogues: [
       {
         id: 'lam_taunt_1',
@@ -46,7 +46,7 @@ export const NPCS = {
     id: 'recruiter_sarah',
     name: 'Sarah Tuyển Dụng',
     role: 'Head of Talent Acquisition @ Big Tech',
-    avatar: '👩‍💼',
+    avatar: '‍',
     dialogues: [
       {
         id: 'sarah_tip_1',
@@ -70,7 +70,7 @@ export class DialogueManager {
       if (option.repGain) d.character.rep += option.repGain;
       if (option.disciplineGain) d.stats.discipline = Math.min(100, d.stats.discipline + option.disciplineGain);
       if (option.focusGain) d.stats.focus = Math.min(100, d.stats.focus + option.focusGain);
-      state.log(`💬 Trò chuyện cùng ${NPCS[npcId].name}. Nhận thức và động lực được củng cố!`, 'info');
+      state.log(` Trò chuyện cùng ${NPCS[npcId].name}. Nhận thức và động lực được củng cố!`, 'info');
     });
   }
 }

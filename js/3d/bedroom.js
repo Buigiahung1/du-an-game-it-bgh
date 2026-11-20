@@ -1,5 +1,8 @@
 // 3D Bedroom Environment for CODE LEGACY
-// Matches Image 2: Cozy Modern Gaming Bedroom, Battlestation Desk, Bed with Under-LEDs, Window, Ergonomic Chair
+// Matches Reference Images: Cozy Modern Student Bedroom, Battlestation Desk, Under-LED Bed,
+// Polaroid Photo Wall with Fairy Lights, Acoustic Guitar, Floor Rug, Movie Posters, and Sunbeam Dust Particles.
+
+import { TextureGenerator } from './textureGenerator.js';
 
 export class Bedroom3D {
   constructor(scene) {
@@ -13,8 +16,10 @@ export class Bedroom3D {
     // Interactive Trigger Zones
     this.triggers = [];
 
-    // Screen emissive material to update dynamically
+    // Emissive materials and particle system for animation
     this.screenMaterials = [];
+    this.fairyLights = [];
+    this.dustParticles = null;
 
     this.buildRoom();
     this.scene.add(this.roomGroup);
@@ -26,18 +31,19 @@ export class Bedroom3D {
     const roomD = 5.2;
     const roomH = 3.0;
 
-    // === MATERIALS ===
-    // Light Oak Parquet Floor
+    // === MATERIALS WITH HIGH-DEFINITION PROCEDURAL PBR TEXTURES ===
+    // Light Oak Parquet Floor (Staggered Planks & Grain)
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0xc8b59e,
-      roughness: 0.45,
+      map: TextureGenerator.createParquetFloor(),
+      roughness: 0.35,
       metalness: 0.05
     });
 
-    // Dark Slate Accent Wall (behind desk & bed)
+    // Dark Slate Accent Wall (Masonry stone texture & mortar)
     const slateWallMat = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      roughness: 0.85
+      map: TextureGenerator.createSlateWall(),
+      roughness: 0.65,
+      metalness: 0.05
     });
 
     // Warm Off-White Wall
@@ -77,14 +83,14 @@ export class Bedroom3D {
     const lightPanelMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xfff3e0,
-      emissiveIntensity: 0.9
+      emissiveIntensity: 0.85
     });
     const lightPanel = new THREE.Mesh(lightPanelGeo, lightPanelMat);
     lightPanel.position.set(0, roomH - 0.02, 0);
     this.roomGroup.add(lightPanel);
 
     // Ceiling Ambient Light Source
-    const ceilingPointLight = new THREE.PointLight(0xffeedd, 1.8, 8.0);
+    const ceilingPointLight = new THREE.PointLight(0xffeedd, 1.6, 8.5);
     ceilingPointLight.position.set(0, roomH - 0.2, 0);
     ceilingPointLight.castShadow = true;
     ceilingPointLight.shadow.mapSize.width = 1024;
@@ -122,10 +128,12 @@ export class Bedroom3D {
     this.roomGroup.add(glass);
 
     // Sunlight streaming through window
-    const sunLight = new THREE.DirectionalLight(0xffeedd, 1.4);
+    const sunLight = new THREE.DirectionalLight(0xffeedd, 1.5);
     sunLight.position.set(2.0, 4.0, -5.0);
     sunLight.target.position.set(0, 0.5, 0);
     sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
     this.roomGroup.add(sunLight);
     this.roomGroup.add(sunLight.target);
 
@@ -155,6 +163,12 @@ export class Bedroom3D {
     doorFrame.position.set(-0.2, 1.1, roomD / 2);
     this.roomGroup.add(doorFrame);
 
+    // Wooden Door Panel
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.6 });
+    const doorPanel = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.15, 0.05), doorMat);
+    doorPanel.position.set(-0.2, 1.08, roomD / 2 - 0.02);
+    this.roomGroup.add(doorPanel);
+
     // Outer Walls Collision
     this.collisionBoxes.push(
       { minX: -roomW / 2 - 0.2, maxX: -roomW / 2 + 0.1, minZ: -roomD / 2, maxZ: roomD / 2 }, // Left
@@ -163,22 +177,36 @@ export class Bedroom3D {
       { minX: -roomW / 2, maxX: roomW / 2, minZ: roomD / 2 - 0.1, maxZ: roomD / 2 + 0.3 }   // Front
     );
 
-    // 4. FURNITURE: BATTLESTATION DESK SETUP (Matching Image 2)
+    // 4. FURNITURE: BATTLESTATION DESK SETUP
     this.buildBattlestation(oakMat, cabinetMat);
 
-    // 5. FURNITURE: PLATFORM BED (Matching Image 2)
+    // 5. FURNITURE: PLATFORM BED WITH UNDER-BED AMBER LED
     this.buildPlatformBed(oakMat, cabinetMat);
 
     // 6. FURNITURE: WARDROBE & STORAGE CABINETS
     this.buildWardrobe(cabinetMat, oakMat);
 
-    // 7. SETUP INTERACTIVE TRIGGERS
+    // 7. POLAROID PHOTO WALL & WARM FAIRY STRING LIGHTS (Reference Image 4)
+    this.buildPhotoWallAndFairyLights();
+
+    // 8. ACOUSTIC GUITAR (Reference Image 3)
+    this.buildAcousticGuitar();
+
+    // 9. COZY FLOOR RUG (Reference Image 3)
+    this.buildFloorRug();
+
+    // 10. MOVIE & TECH POSTERS (Reference Image 3)
+    this.buildWallPosters();
+
+    // 11. WINDOW SUNBEAM DUST PARTICLES
+    this.buildDustParticles();
+
+    // 12. SETUP INTERACTIVE TRIGGERS
     this.setupTriggers();
   }
 
   buildBattlestation(oakMat, cabinetMat) {
     const deskGroup = new THREE.Group();
-    // Placed along the left wall (X ~ -1.7, Z ~ -1.2)
     deskGroup.position.set(-1.7, 0, -1.2);
 
     // Desk Top (Length 2.2m, Width 0.8m, Height 0.74m)
@@ -196,7 +224,7 @@ export class Bedroom3D {
     drawerMesh.castShadow = true;
     deskGroup.add(drawerMesh);
 
-    // Right Desk Legs (Metal Frame)
+    // Metal Frame Legs
     const legGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8);
     const legMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 });
     const legR1 = new THREE.Mesh(legGeo, legMat);
@@ -206,7 +234,7 @@ export class Bedroom3D {
     deskGroup.add(legR1);
     deskGroup.add(legR2);
 
-    // Overhead Floating Wall Cabinets & LED Light Bar (Image 2)
+    // Overhead Floating Wall Cabinets & LED Light Bar
     const wallCabGeo = new THREE.BoxGeometry(2.2, 0.45, 0.35);
     const wallCab = new THREE.Mesh(wallCabGeo, cabinetMat);
     wallCab.position.set(0, 2.2, -0.22);
@@ -229,7 +257,7 @@ export class Bedroom3D {
     deskLedLight.position.set(0, 1.9, -0.15);
     deskGroup.add(deskLedLight);
 
-    // DUAL MONITORS (Matching Image 2)
+    // DUAL MONITORS (Left: Cyan Matrix/IDE, Right: Violet System Dashboard)
     [-0.38, 0.38].forEach((xOffset, idx) => {
       // Monitor Stand Arm
       const armGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.35, 8);
@@ -245,12 +273,13 @@ export class Bedroom3D {
       frame.castShadow = true;
       deskGroup.add(frame);
 
-      // Glowing Display
+      // Glowing Display with High-Res Real Code / Telemetry
       const screenGeo = new THREE.PlaneGeometry(0.64, 0.38);
+      const screenTex = idx === 0 ? TextureGenerator.createIDEScreen() : TextureGenerator.createTelemetryScreen();
       const screenMat = new THREE.MeshStandardMaterial({
-        color: 0x090d16,
+        map: screenTex,
         emissive: idx === 0 ? 0x00f0ff : 0xa855f7,
-        emissiveIntensity: 0.55,
+        emissiveIntensity: 0.38,
         roughness: 0.2
       });
       this.screenMaterials.push(screenMat);
@@ -265,7 +294,7 @@ export class Bedroom3D {
     const kbMat = new THREE.MeshStandardMaterial({
       color: 0x18181b,
       emissive: 0x00f0ff,
-      emissiveIntensity: 0.2,
+      emissiveIntensity: 0.25,
       roughness: 0.3
     });
     const kb = new THREE.Mesh(kbGeo, kbMat);
@@ -292,35 +321,46 @@ export class Bedroom3D {
     pc.castShadow = true;
     deskGroup.add(pc);
 
-    // ERGONOMIC CHAIR (Herman Miller Aeron Style from Image 2)
+    // Desk Clutter: Ceramic Coffee Mug
+    const mugGeo = new THREE.CylinderGeometry(0.04, 0.035, 0.09, 12);
+    const mugMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const mug = new THREE.Mesh(mugGeo, mugMat);
+    mug.position.set(0.65, 0.81, 0.1);
+    mug.castShadow = true;
+    deskGroup.add(mug);
+
+    // Sticky Notes on Desk
+    const stickyGeo = new THREE.PlaneGeometry(0.08, 0.08);
+    const stickyMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.9 });
+    const sticky = new THREE.Mesh(stickyGeo, stickyMat);
+    sticky.rotation.x = -Math.PI / 2;
+    sticky.position.set(-0.4, 0.77, 0.25);
+    deskGroup.add(sticky);
+
+    // ERGONOMIC CHAIR (Herman Miller Aeron Style)
     const chairGroup = new THREE.Group();
     chairGroup.position.set(0, 0, 0.65);
 
-    // Chair 5-Star Base
     const baseCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), legMat);
     baseCenter.position.y = 0.1;
     chairGroup.add(baseCenter);
 
-    // Gas lift cylinder
     const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8), legMat);
     cylinder.position.y = 0.28;
     chairGroup.add(cylinder);
 
-    // Mesh Seat Pan
     const seatMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.46), seatMat);
     seat.position.y = 0.46;
     seat.castShadow = true;
     chairGroup.add(seat);
 
-    // High Ergonomic Mesh Backrest
     const back = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.55, 0.04), seatMat);
     back.position.set(0, 0.75, 0.20);
     back.rotation.x = -0.15;
     back.castShadow = true;
     chairGroup.add(back);
 
-    // Armrests
     [-0.25, 0.25].forEach(x => {
       const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.22), legMat);
       arm.position.set(x, 0.58, 0.05);
@@ -341,10 +381,9 @@ export class Bedroom3D {
 
   buildPlatformBed(oakMat, cabinetMat) {
     const bedGroup = new THREE.Group();
-    // Placed on back-right (X ~ 1.0, Z ~ -1.5) under the window
     bedGroup.position.set(1.0, 0, -1.5);
 
-    // Wooden Platform Base with drawers (2.1m Length, 1.3m Width, 0.45m Height)
+    // Platform Base
     const baseGeo = new THREE.BoxGeometry(1.3, 0.45, 2.1);
     const base = new THREE.Mesh(baseGeo, oakMat);
     base.position.set(0, 0.225, 0);
@@ -352,7 +391,7 @@ export class Bedroom3D {
     base.receiveShadow = true;
     bedGroup.add(base);
 
-    // Under-bed Amber Warm LED Strip (Image 2)
+    // Under-bed Amber Warm LED Strip
     const ledStripGeo = new THREE.BoxGeometry(1.2, 0.02, 2.0);
     const ledStripMat = new THREE.MeshStandardMaterial({
       color: 0xffaa44,
@@ -367,14 +406,14 @@ export class Bedroom3D {
     underBedLight.position.set(0, 0.15, 0.2);
     bedGroup.add(underBedLight);
 
-    // Comfortable Mattress
+    // Mattress
     const mattressGeo = new THREE.BoxGeometry(1.2, 0.22, 2.0);
     const mattressMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
     const mattress = new THREE.Mesh(mattressGeo, mattressMat);
     mattress.position.set(0, 0.55, 0);
     bedGroup.add(mattress);
 
-    // Navy Blue Duvet Blanket (Image 2)
+    // Navy Blue Duvet Blanket
     const duvetGeo = new THREE.BoxGeometry(1.22, 0.12, 1.4);
     const duvetMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
     const duvet = new THREE.Mesh(duvetGeo, duvetMat);
@@ -401,14 +440,14 @@ export class Bedroom3D {
   }
 
   buildWardrobe(cabinetMat, oakMat) {
-    // Tall Wardrobe on right corner (X: 2.1 to 2.7, Z: 0.5 to 2.5)
+    // Tall Wardrobe on right corner
     const wardrobeGeo = new THREE.BoxGeometry(0.65, 2.7, 2.0);
     const wardrobe = new THREE.Mesh(wardrobeGeo, cabinetMat);
     wardrobe.position.set(2.4, 1.35, 1.4);
     wardrobe.castShadow = true;
     this.roomGroup.add(wardrobe);
 
-    // Bookshelves with books (X: 0.5 to 1.7, Z: -2.5)
+    // Floating Bookshelves on the back wall
     const shelfGeo = new THREE.BoxGeometry(1.2, 0.04, 0.25);
     [1.6, 2.0, 2.4].forEach(yPos => {
       const shelf = new THREE.Mesh(shelfGeo, oakMat);
@@ -426,12 +465,177 @@ export class Bedroom3D {
     });
   }
 
+  buildPhotoWallAndFairyLights() {
+    // Reference Image 4: Polaroid Photo Wall with String Lantern Fairy Lights
+    const photoGroup = new THREE.Group();
+    photoGroup.position.set(0.9, 1.8, -2.53);
+
+    // 1. Polaroid Photos Grid (4 rows x 5 columns)
+    const cardGeo = new THREE.PlaneGeometry(0.16, 0.20);
+    const colors = [0xfef08a, 0xfce7f3, 0xe0e7ff, 0xdcfce7, 0xf3f4f6, 0xffedd5];
+
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 5; c++) {
+        const mat = new THREE.MeshStandardMaterial({
+          color: colors[(r * 5 + c) % colors.length],
+          roughness: 0.8
+        });
+        const card = new THREE.Mesh(cardGeo, mat);
+        card.position.set((c - 2) * 0.22, (r - 1.5) * 0.24, 0);
+        card.rotation.z = (Math.sin(r * 3 + c * 5) * 0.08); // slight natural tilt
+        photoGroup.add(card);
+      }
+    }
+
+    // 2. Fairy String Lights with Glowing Spheres
+    const lanternGeo = new THREE.SphereGeometry(0.045, 12, 12);
+    const lanternMat = new THREE.MeshStandardMaterial({
+      color: 0xfff4cc,
+      emissive: 0xffbb44,
+      emissiveIntensity: 1.8,
+      roughness: 0.3
+    });
+
+    for (let i = 0; i < 7; i++) {
+      const lantern = new THREE.Mesh(lanternGeo, lanternMat);
+      // Draped catenary curve: Y dips in the center
+      const t = (i / 6.0) * 2.0 - 1.0;
+      const x = t * 0.55;
+      const y = 0.55 - (1.0 - t * t) * 0.15;
+      lantern.position.set(x, y, 0.05);
+      photoGroup.add(lantern);
+      this.fairyLights.push(lantern);
+    }
+
+    // Warm Ambient Light from the fairy garland
+    const fairyPointLight = new THREE.PointLight(0xffbb55, 1.1, 2.5);
+    fairyPointLight.position.set(0, 0.4, 0.1);
+    photoGroup.add(fairyPointLight);
+
+    this.roomGroup.add(photoGroup);
+  }
+
+  buildAcousticGuitar() {
+    // Reference Image 3: Acoustic Wooden Guitar leaning beside wardrobe
+    const guitarGroup = new THREE.Group();
+    guitarGroup.position.set(1.95, 0, 0.15);
+    guitarGroup.rotation.y = -Math.PI * 0.25;
+    guitarGroup.rotation.z = 0.18; // leaning against wall
+
+    const woodMat = new THREE.MeshStandardMaterial({
+      color: 0x935116,
+      roughness: 0.4,
+      metalness: 0.1
+    });
+
+    const darkWoodMat = new THREE.MeshStandardMaterial({
+      color: 0x3e2723,
+      roughness: 0.6
+    });
+
+    // Lower Bout (Body)
+    const bodyLow = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 16), woodMat);
+    bodyLow.rotation.x = Math.PI / 2;
+    bodyLow.position.set(0, 0.22, 0);
+    guitarGroup.add(bodyLow);
+
+    // Upper Bout
+    const bodyUp = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.08, 16), woodMat);
+    bodyUp.rotation.x = Math.PI / 2;
+    bodyUp.position.set(0, 0.42, 0);
+    guitarGroup.add(bodyUp);
+
+    // Soundhole (Black circle on body)
+    const holeMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.05, 16), holeMat);
+    hole.position.set(0, 0.38, 0.042);
+    guitarGroup.add(hole);
+
+    // Neck
+    const neck = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.52, 0.03), darkWoodMat);
+    neck.position.set(0, 0.72, 0);
+    guitarGroup.add(neck);
+
+    // Headstock
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.035), woodMat);
+    head.position.set(0, 1.02, 0);
+    guitarGroup.add(head);
+
+    this.roomGroup.add(guitarGroup);
+  }
+
+  buildFloorRug() {
+    // Reference Image 3: Moroccan Woven Rug in front of desk & bed
+    const rugGeo = new THREE.PlaneGeometry(1.8, 2.2);
+    const rugMat = new THREE.MeshStandardMaterial({
+      map: TextureGenerator.createWovenRug(),
+      roughness: 0.85,
+      metalness: 0.0
+    });
+    const rug = new THREE.Mesh(rugGeo, rugMat);
+    rug.rotation.x = -Math.PI / 2;
+    rug.position.set(-0.2, 0.005, 0.2);
+    rug.receiveShadow = true;
+    this.roomGroup.add(rug);
+  }
+
+  buildWallPosters() {
+    // Reference Image 3: Detailed Tech Artwork & Movie Posters
+    // Left Wall Poster ("NEO TOKYO // CYBER MATRIX")
+    const poster1Geo = new THREE.PlaneGeometry(0.7, 1.05);
+    const poster1Mat = new THREE.MeshStandardMaterial({
+      map: TextureGenerator.createPoster("NEO CYBER", "MATRIX REVOLUTION // 2026", "#a855f7"),
+      roughness: 0.4
+    });
+    const poster1 = new THREE.Mesh(poster1Geo, poster1Mat);
+    poster1.position.set(-2.74, 1.8, 0.8);
+    poster1.rotation.y = Math.PI / 2;
+    this.roomGroup.add(poster1);
+
+    // Back Wall Poster ("CODE LEGACY: FROM ZERO TO LEGEND")
+    const poster2Geo = new THREE.PlaneGeometry(0.85, 0.60);
+    const poster2Mat = new THREE.MeshStandardMaterial({
+      map: TextureGenerator.createPoster("ZERO TO LEGEND", "THE AWAKENING", "#00f0ff"),
+      roughness: 0.4
+    });
+    const poster2 = new THREE.Mesh(poster2Geo, poster2Mat);
+    poster2.position.set(-0.3, 2.2, -2.54);
+    this.roomGroup.add(poster2);
+  }
+
+  buildDustParticles() {
+    // Volumetric dust motes streaming from the window in golden hour light
+    const particleCount = 80;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      // Clustered inside the sunlight volume from window
+      positions[i] = 0.2 + (Math.random() - 0.5) * 1.8;
+      positions[i + 1] = 0.8 + Math.random() * 1.8;
+      positions[i + 2] = -1.8 + Math.random() * 2.2;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+      color: 0xffeedd,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.dustParticles = new THREE.Points(geometry, material);
+    this.roomGroup.add(this.dustParticles);
+  }
+
   setupTriggers() {
     // 1. PC Battlestation Trigger
     this.triggers.push({
       id: "pc_desk",
       name: "Máy tính Battlestation",
-      prompt: "[ E ] Sử Dụng Máy Tính (Học Code & Dự Án)",
+      prompt: "[ E ] Sử Dụng Máy Tính (Học Code & Thử Thách)",
       position: new THREE.Vector3(-1.7, 0, -0.6),
       radius: 1.3,
       action: "open_pc"
@@ -477,10 +681,28 @@ export class Bedroom3D {
   }
 
   update(delta) {
-    // Subtle pulsating glow on monitors
     const time = performance.now() * 0.003;
+
+    // Subtle pulsating glow on monitors
     this.screenMaterials.forEach((mat, idx) => {
       mat.emissiveIntensity = 0.5 + Math.sin(time + idx * 2.0) * 0.15;
     });
+
+    // Gently twinkle fairy lights
+    this.fairyLights.forEach((lantern, idx) => {
+      if (lantern.material) {
+        lantern.material.emissiveIntensity = 1.4 + Math.sin(time * 2.0 + idx * 1.2) * 0.4;
+      }
+    });
+
+    // Animate dust particles floating gently
+    if (this.dustParticles) {
+      const pos = this.dustParticles.geometry.attributes.position.array;
+      for (let i = 1; i < pos.length; i += 3) {
+        pos[i] += Math.sin(time + i) * 0.001;
+        if (pos[i] > 2.7) pos[i] = 0.8;
+      }
+      this.dustParticles.geometry.attributes.position.needsUpdate = true;
+    }
   }
 }

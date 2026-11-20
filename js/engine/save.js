@@ -8,7 +8,7 @@ export class SaveManager {
     try {
       const serialized = JSON.stringify(state.data);
       localStorage.setItem(SAVE_KEY, serialized);
-      state.log('💾 Tiến trình trò chơi đã được lưu thành công.', 'success');
+      state.log(' Tiến trình trò chơi đã được lưu thành công.', 'success');
       return true;
     } catch (e) {
       console.error('Save error:', e);
@@ -26,7 +26,7 @@ export class SaveManager {
       state.update(d => {
         Object.assign(d, parsed);
       });
-      state.log('📂 Đã tải dữ liệu lưu trữ thành công.', 'success');
+      state.log(' Đã tải dữ liệu lưu trữ thành công.', 'success');
       return true;
     } catch (e) {
       console.error('Load error:', e);
@@ -42,7 +42,7 @@ export class SaveManager {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    state.log('📦 Xuất file dữ liệu save game thành công.', 'info');
+    state.log(' Xuất file dữ liệu save game thành công.', 'info');
   }
 
   static importJson(file) {
@@ -55,7 +55,7 @@ export class SaveManager {
             state.update(d => {
               Object.assign(d, parsed);
             });
-            state.log('📥 Nhập file save thành công! Đã khôi phục trạng thái.', 'success');
+            state.log(' Nhập file save thành công! Đã khôi phục trạng thái.', 'success');
             resolve(true);
           } else {
             throw new Error('Dữ liệu save không đúng định dạng');
@@ -74,7 +74,7 @@ export class SaveManager {
     state.update(d => {
       Object.assign(d, state.getDefaultState());
     });
-    state.log('🔄 Đã thiết lập lại trò chơi về trạng thái ban đầu.', 'warning');
+    state.log(' Đã thiết lập lại trò chơi về trạng thái ban đầu.', 'warning');
   }
 }
 

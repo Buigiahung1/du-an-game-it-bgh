@@ -67,7 +67,7 @@ export class WeeklyMissionManager {
       d.character.money += mission.rewardMoney;
       d.character.rep += mission.rewardRep;
       d.stats.discipline = Math.min(100, d.stats.discipline + 10);
-      state.log(`🎖️ HOÀN THÀNH WEEKLY SPRINT: "${mission.title}"! Nhận +$${mission.rewardMoney} và +${mission.rewardExp} EXP!`, 'success');
+      state.log(`️ HOÀN THÀNH WEEKLY SPRINT: "${mission.title}"! Nhận +$${mission.rewardMoney} và +${mission.rewardExp} EXP!`, 'success');
     });
 
     audio.playLevelUp();

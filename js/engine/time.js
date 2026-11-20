@@ -61,18 +61,18 @@ export class TimeManager {
   }
 
   onDayPassed(d, daysCount) {
-    state.log(`☀️ Một ngày mới đã bắt đầu (${d.time.dayOfWeek}, Ngày ${d.time.day}).`, 'info');
+    state.log(`️ Một ngày mới đã bắt đầu (${d.time.dayOfWeek}, Ngày ${d.time.day}).`, 'info');
     
     // Weekly Living Expenses ($45/tuần tiền trọ và mạng)
     if (d.time.day % 7 === 1 && d.time.day > 1) {
       const rent = 45;
       if (d.character.money >= rent) {
         d.character.money -= rent;
-        state.log(`💸 Chi phí sinh hoạt & tiền trọ tuần: -$${rent}.`, 'warning');
+        state.log(` Chi phí sinh hoạt & tiền trọ tuần: -$${rent}.`, 'warning');
       } else {
         d.character.money = 0;
         d.stats.mentalHealth = Math.max(10, d.stats.mentalHealth - 25);
-        state.log(`⚠️ Bạn không đủ tiền trả chi phí sinh hoạt! Chủ nhà cằn nhằn, sức khỏe tinh thần sụt giảm!`, 'danger');
+        state.log(`[WARN] Bạn không đủ tiền trả chi phí sinh hoạt! Chủ nhà cằn nhằn, sức khỏe tinh thần sụt giảm!`, 'danger');
       }
     }
 

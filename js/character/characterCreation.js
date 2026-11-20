@@ -81,7 +81,7 @@ export class CharacterCreationManager {
       d.startup = null;
 
       d.logs = [
-        { time: '08:00', text: `🌟 Nhân vật ${charName} khởi đầu với hành trình "${bg.name}". Sứ mệnh: Trở thành Huyền thoại công nghệ!`, type: 'success' }
+        { time: '08:00', text: `REP Nhân vật ${charName} khởi đầu với hành trình "${bg.name}". Sứ mệnh: Trở thành Huyền thoại công nghệ!`, type: 'success' }
       ];
     });
 

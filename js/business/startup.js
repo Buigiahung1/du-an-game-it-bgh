@@ -51,7 +51,7 @@ export class StartupManager {
       StatsManager.addExp(1000);
 
       audio.playLevelUp();
-      state.log(`🚀 THÀNH LẬP DOANH NGHIỆP: "${d.startup.name}"! Bạn chính thức bước lên cương vị Nhà Sáng Lập Công Nghệ!`, 'success');
+      state.log(`[LAUNCH] THÀNH LẬP DOANH NGHIỆP: "${d.startup.name}"! Bạn chính thức bước lên cương vị Nhà Sáng Lập Công Nghệ!`, 'success');
     });
 
     return true;
@@ -66,7 +66,7 @@ export class StartupManager {
 
     if (s.cashReserve < emp.salary * 2) {
       audio.playError();
-      state.log(`⚠️ Quỹ dự phòng công ty không đủ trả 2 tháng lương cho nhân sự này!`, 'warning');
+      state.log(`[WARN] Quỹ dự phòng công ty không đủ trả 2 tháng lương cho nhân sự này!`, 'warning');
       return false;
     }
 
@@ -84,7 +84,7 @@ export class StartupManager {
       d.startup.valuation += emp.salary * 12;
 
       audio.playSuccess();
-      state.log(`🤝 Đã chiêu mộ nhân tài: ${emp.name} (${emp.role})! Tốc độ phát triển sản phẩm gia tăng!`, 'success');
+      state.log(`[DEAL] Đã chiêu mộ nhân tài: ${emp.name} (${emp.role})! Tốc độ phát triển sản phẩm gia tăng!`, 'success');
     });
 
     return true;
@@ -96,7 +96,7 @@ export class StartupManager {
 
     if (s.productProgress < 80) {
       audio.playError();
-      state.log(`⚠️ Sản phẩm chưa hoàn thiện đủ (cần tối thiểu 80% MVP, hiện có: ${s.productProgress}%) để gọi vốn!`, 'warning');
+      state.log(`[WARN] Sản phẩm chưa hoàn thiện đủ (cần tối thiểu 80% MVP, hiện có: ${s.productProgress}%) để gọi vốn!`, 'warning');
       return false;
     }
 
@@ -109,7 +109,7 @@ export class StartupManager {
       StatsManager.addExp(2500);
 
       audio.playLevelUp();
-      state.log(`💎 GỌI VỐN THÀNH CÔNG: Quỹ đầu tư mạo hiểm Silicon Valley rót $${fundingAmount.toLocaleString()} Series A! Định giá công ty đạt $12,000,000!`, 'success');
+      state.log(`[VAL] GỌI VỐN THÀNH CÔNG: Quỹ đầu tư mạo hiểm Silicon Valley rót $${fundingAmount.toLocaleString()} Series A! Định giá công ty đạt $12,000,000!`, 'success');
     });
 
     return true;
