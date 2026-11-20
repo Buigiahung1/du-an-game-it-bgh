@@ -1,0 +1,159 @@
+/* CODE LEGACY: Modern AAA Cyberpunk & Tech Glassmorphism Styles */
+:root {
+  --bg-primary: #090d16;
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --border-glow: rgba(0, 240, 255, 0.25);
+  --accent-cyan: #00f0ff;
+  --accent-purple: #a855f7;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0f172a;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00f0ff;
+}
+
+/* Glassmorphism Panels */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(0, 240, 255, 0.3);
+}
+
+.glass-card-interactive {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.glass-card-interactive:hover {
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 10px 25px -5px rgba(0, 240, 255, 0.15);
+}
+
+/* Cyber Glow Effects */
+.glow-cyan {
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+}
+.glow-purple {
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+}
+.box-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+/* Grid Background */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Scanline Effect */
+.scanline-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Code Editor Window */
+.code-window {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background: #050811;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 8px;
+}
+
+/* Stat Progress Bar Animations */
+.progress-fill {
+  transition: width 0.4s ease-out;
+}
+
+/* Pulse Animation */
+@keyframes cyberPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+.cyber-pulse {
+  animation: cyberPulse 3s infinite ease-in-out;
+}
+
+/* Badge Rarity Colors */
+.badge-common { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #64748b; }
+.badge-uncommon { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; }
+.badge-rare { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid #0ea5e9; }
+.badge-epic { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid #a855f7; }
+.badge-legendary { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #f59e0b; }
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast-msg {
+  pointer-events: auto;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Tab active styles */
+.tab-btn.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+}
+
