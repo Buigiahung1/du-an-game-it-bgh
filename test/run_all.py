@@ -121,11 +121,11 @@ class TestCodeLegacyQualityAssurance(unittest.TestCase):
             self.assertIn(f'data-tab="{tab}"', html, f"Tab button for {tab} missing in index.html")
             self.assertIn(f'id="tab-{tab}"', html, f"Tab container tab-{tab} missing in index.html")
 
-        # Modals
+        # Modals & 3D Canvas
         self.assertIn('id="challenge-modal"', html)
         self.assertIn('id="interview-modal"', html)
         self.assertIn('id="character-creation-modal"', html)
-        self.assertIn('id="battlestation-3d-canvas"', html)
+        self.assertTrue('id="game-canvas"' in html or 'id="battlestation-3d-canvas"' in html, "Master 3D canvas must exist")
 
 if __name__ == "__main__":
     unittest.main()

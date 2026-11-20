@@ -30,7 +30,11 @@ modules = [
     'js/engine/settings.js',
     'js/skills/skillTree.js',
     'js/life/lifeActions.js',
-    'js/render3d/battlestation3d.js',
+    'js/3d/character.js',
+    'js/3d/bedroom.js',
+    'js/3d/npc.js',
+    'js/3d/cameraController.js',
+    'js/3d/game3d.js',
     'js/ui/ui.js',
     'js/main.js'
 ]
@@ -52,10 +56,10 @@ for m in modules:
     
     combined.append(f'// ==========================================\n// MODULE: {m}\n// ==========================================\n' + code.strip())
 
-bundle_code = '// CODE LEGACY - Standalone Bundle (No CORS restriction, runs everywhere)\n(function() {\n  "use strict";\n\n' + '\n\n'.join(combined) + '\n})();'
+bundle_code = '// CODE LEGACY - 3D RPG Master Bundle\n(function() {\n  "use strict";\n\n' + '\n\n'.join(combined) + '\n})();'
 
 output_path = os.path.join(PROJECT_ROOT, 'bundle.js')
 with open(output_path, 'w', encoding='utf-8') as f:
     f.write(bundle_code)
 
-print(f"Generated bundle.js successfully: {len(bundle_code)} bytes")
+print(f"Generated bundle.js successfully: {len(bundle_code)} bytes with {len(modules)} modules")

@@ -49,6 +49,17 @@ export class UIManager {
 
   switchTab(tabId) {
     this.currentTab = tabId;
+    const menuModal = document.getElementById('game-menu-modal');
+
+    if (tabId === 'overview') {
+      if (menuModal) menuModal.classList.add('hidden');
+      if (window.game3D && window.game3D.player && window.game3D.player.isSitting) {
+        window.game3D.player.setSitting(false);
+      }
+    } else {
+      if (menuModal) menuModal.classList.remove('hidden');
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
     });
@@ -56,6 +67,31 @@ export class UIManager {
       content.classList.toggle('hidden', content.id !== `tab-${tabId}`);
     });
     this.renderCurrentTab();
+  }
+
+  toggleMenuModal(tabId) {
+    const modal = document.getElementById('game-menu-modal');
+    if (!modal) return;
+    
+    if (tabId) {
+      this.switchTab(tabId);
+    } else {
+      if (modal.classList.contains('hidden')) {
+        this.switchTab('skills');
+      } else {
+        this.closeMenuModal();
+      }
+    }
+    audio.playClick();
+  }
+
+  closeMenuModal() {
+    const modal = document.getElementById('game-menu-modal');
+    if (modal) modal.classList.add('hidden');
+    if (window.game3D && window.game3D.player && window.game3D.player.isSitting) {
+      window.game3D.player.setSitting(false);
+    }
+    audio.playClick();
   }
 
   onStateChange(event, payload) {
@@ -980,6 +1016,12 @@ export class UIManager {
     const closeCreate = document.getElementById('close-create-modal');
     if (closeCreate && createModal) {
       closeCreate.onclick = () => createModal.classList.add('hidden');
+    }
+
+    const menuModal = document.getElementById('game-menu-modal');
+    const closeMenu = document.getElementById('close-menu-modal');
+    if (closeMenu && menuModal) {
+      closeMenu.onclick = () => this.closeMenuModal();
     }
   }
 

@@ -9,3 +9,4 @@ start "" "%~dp0index.html"
 echo.
 echo Game đã mở! Chúc bạn có trải nghiệm tuyệt vời.
 timeout /t 3 >nul
+

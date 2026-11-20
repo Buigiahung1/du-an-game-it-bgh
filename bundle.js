@@ -1,4 +1,4 @@
-// CODE LEGACY - Standalone Bundle (No CORS restriction, runs everywhere)
+// CODE LEGACY - 3D RPG Master Bundle
 (function() {
   "use strict";
 
@@ -2474,253 +2474,1491 @@ class LifeManager {
 }
 
 // ==========================================
-// MODULE: js/render3d/battlestation3d.js
+// MODULE: js/3d/character.js
 // ==========================================
-// 3D Battlestation & Room Viewport using Three.js (with Canvas fallback)
+// 3D Humanoid Character Engine for CODE LEGACY
+// Realistic proportions matching Image 1: Korean/Asian IT Student, Hoodie, Jeans, Sneakers, Canvas Bag
 
+class Character3D {
+  constructor(scene) {
+    this.scene = scene;
+    this.mesh = new THREE.Group();
+    this.mesh.name = "PlayerCharacter";
 
-class Battlestation3D {
-  constructor(canvasContainerId) {
-    this.container = document.getElementById(canvasContainerId);
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.deskGroup = null;
-    this.laptopMesh = null;
-    this.monitorMesh = null;
-    this.chairMesh = null;
-    this.ambientLight = null;
-    this.neonLight = null;
-    this.isDragging = false;
-    this.prevMouseX = 0;
-    this.prevMouseY = 0;
-    this.rotationY = -0.4;
-    this.rotationX = 0.2;
+    // Movement state
+    this.position = new THREE.Vector3(0, 0, 0);
+    this.velocity = new THREE.Vector3(0, 0, 0);
+    this.rotationY = 0;
+    this.targetRotationY = 0;
+    this.moveSpeed = 3.6; // m/s
+    this.runMultiplier = 1.6;
+    this.isMoving = false;
+    this.isRunning = false;
+    this.isSitting = false;
+    this.animTime = 0;
+
+    // Bone & Limb References for Animation
+    this.limbs = {};
+
+    this.buildHumanoidModel();
+    this.scene.add(this.mesh);
   }
 
-  init() {
-    if (!this.container) return;
+  buildHumanoidModel() {
+    // === MATERIALS (PBR Stylized AAA) ===
+    // Skin Material
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0xffdfd0,
+      roughness: 0.65,
+      metalness: 0.05
+    });
 
-    // Check if Three.js is loaded
-    if (typeof THREE === 'undefined') {
-      this.renderFallback2D();
+    // Dark Messy Hair Material
+    const hairMat = new THREE.MeshStandardMaterial({
+      color: 0x18181b,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+
+    // Deep Navy Blue Hoodie Material (from Image 1)
+    const hoodieMat = new THREE.MeshStandardMaterial({
+      color: 0x223652,
+      roughness: 0.8,
+      metalness: 0.05
+    });
+
+    // Inner V-Neck Heather Gray Shirt Material
+    const shirtMat = new THREE.MeshStandardMaterial({
+      color: 0xd4d4d8,
+      roughness: 0.9,
+      metalness: 0.0
+    });
+
+    // Slim-fit Dark Washed Jeans Material
+    const jeansMat = new THREE.MeshStandardMaterial({
+      color: 0x27272a,
+      roughness: 0.75,
+      metalness: 0.05
+    });
+
+    // Gray Canvas Sneakers Material
+    const shoeMat = new THREE.MeshStandardMaterial({
+      color: 0x52525b,
+      roughness: 0.7,
+      metalness: 0.1
+    });
+
+    // Olive Canvas Bag Material
+    const bagMat = new THREE.MeshStandardMaterial({
+      color: 0x556045,
+      roughness: 0.85,
+      metalness: 0.05
+    });
+
+    // === HIERARCHY ROOT (PELVIS) ===
+    // Total height ~ 1.75m
+    const pelvis = new THREE.Group();
+    pelvis.position.y = 0.92;
+    this.mesh.add(pelvis);
+    this.limbs.pelvis = pelvis;
+
+    // Pelvis Mesh (Lower Torso)
+    const pelvisGeo = new THREE.BoxGeometry(0.32, 0.18, 0.22);
+    const pelvisMesh = new THREE.Mesh(pelvisGeo, jeansMat);
+    pelvisMesh.castShadow = true;
+    pelvis.add(pelvisMesh);
+
+    // === SPINE & UPPER TORSO (HOODIE) ===
+    const spine = new THREE.Group();
+    spine.position.y = 0.12;
+    pelvis.add(spine);
+    this.limbs.spine = spine;
+
+    // Chest / Upper Hoodie
+    const chestGeo = new THREE.BoxGeometry(0.38, 0.36, 0.24);
+    const chestMesh = new THREE.Mesh(chestGeo, hoodieMat);
+    chestMesh.position.y = 0.18;
+    chestMesh.castShadow = true;
+    spine.add(chestMesh);
+
+    // V-Neck opening with inner shirt
+    const vneckGeo = new THREE.PlaneGeometry(0.12, 0.16);
+    const vneckMesh = new THREE.Mesh(vneckGeo, shirtMat);
+    vneckMesh.position.set(0, 0.22, 0.122);
+    spine.add(vneckMesh);
+
+    // Hoodie Pocket (Front pouch)
+    const pocketGeo = new THREE.BoxGeometry(0.24, 0.12, 0.04);
+    const pocketMesh = new THREE.Mesh(pocketGeo, hoodieMat);
+    pocketMesh.position.set(0, 0.10, 0.13);
+    spine.add(pocketMesh);
+
+    // Cross-body Bag Strap
+    const strapGeo = new THREE.BoxGeometry(0.04, 0.48, 0.02);
+    const strapMesh = new THREE.Mesh(strapGeo, bagMat);
+    strapMesh.position.set(0.02, 0.16, 0.125);
+    strapMesh.rotation.z = -0.55;
+    spine.add(strapMesh);
+
+    // Cross-body Canvas Bag (hanging on right hip)
+    const bagGeo = new THREE.BoxGeometry(0.22, 0.20, 0.08);
+    const bagMesh = new THREE.Mesh(bagGeo, bagMat);
+    bagMesh.position.set(-0.22, -0.05, 0.05);
+    bagMesh.rotation.z = 0.15;
+    spine.add(bagMesh);
+
+    // === NECK & HEAD ===
+    const neck = new THREE.Group();
+    neck.position.y = 0.36;
+    spine.add(neck);
+
+    const neckGeo = new THREE.CylinderGeometry(0.06, 0.07, 0.1, 8);
+    const neckMesh = new THREE.Mesh(neckGeo, skinMat);
+    neckMesh.position.y = 0.04;
+    neck.add(neckMesh);
+
+    const headGroup = new THREE.Group();
+    headGroup.position.y = 0.12;
+    neck.add(headGroup);
+    this.limbs.head = headGroup;
+
+    // Head Oval
+    const headGeo = new THREE.SphereGeometry(0.11, 16, 16);
+    headGeo.scale(0.9, 1.15, 1.0);
+    const headMesh = new THREE.Mesh(headGeo, skinMat);
+    headMesh.castShadow = true;
+    headGroup.add(headMesh);
+
+    // Hair (Layered stylized locks matching Image 1)
+    const hairCapGeo = new THREE.SphereGeometry(0.12, 14, 14);
+    hairCapGeo.scale(0.95, 1.15, 1.05);
+    const hairCap = new THREE.Mesh(hairCapGeo, hairMat);
+    hairCap.position.set(0, 0.03, -0.01);
+    headGroup.add(hairCap);
+
+    // Bangs / Front Hair fringe
+    const bangsGeo = new THREE.BoxGeometry(0.16, 0.08, 0.06);
+    const bangs = new THREE.Mesh(bangsGeo, hairMat);
+    bangs.position.set(0, 0.07, 0.09);
+    bangs.rotation.x = 0.2;
+    headGroup.add(bangs);
+
+    // Hanging Hoodie Hood (behind neck)
+    const hoodFoldGeo = new THREE.CylinderGeometry(0.14, 0.16, 0.14, 10);
+    const hoodFold = new THREE.Mesh(hoodFoldGeo, hoodieMat);
+    hoodFold.position.set(0, -0.02, -0.12);
+    hoodFold.rotation.x = 0.4;
+    neck.add(hoodFold);
+
+    // === ARMS (LEFT & RIGHT) ===
+    this.limbs.leftArm = this.buildArm(spine, -0.22, hoodieMat, skinMat, true);
+    this.limbs.rightArm = this.buildArm(spine, 0.22, hoodieMat, skinMat, false);
+
+    // === LEGS (LEFT & RIGHT) ===
+    this.limbs.leftLeg = this.buildLeg(pelvis, -0.10, jeansMat, shoeMat);
+    this.limbs.rightLeg = this.buildLeg(pelvis, 0.10, jeansMat, shoeMat);
+
+    // Cast shadows for all children
+    this.mesh.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }
+
+  buildArm(parent, xOffset, sleeveMat, handMat, isLeft) {
+    const shoulder = new THREE.Group();
+    shoulder.position.set(xOffset, 0.32, 0);
+    parent.add(shoulder);
+
+    // Upper Arm (Hoodie Sleeve rolled slightly)
+    const upperGeo = new THREE.CylinderGeometry(0.06, 0.055, 0.26, 8);
+    const upperMesh = new THREE.Mesh(upperGeo, sleeveMat);
+    upperMesh.position.y = -0.13;
+    shoulder.add(upperMesh);
+
+    // Elbow Joint
+    const elbow = new THREE.Group();
+    elbow.position.y = -0.26;
+    shoulder.add(elbow);
+
+    // Forearm
+    const lowerGeo = new THREE.CylinderGeometry(0.05, 0.045, 0.24, 8);
+    const lowerMesh = new THREE.Mesh(lowerGeo, sleeveMat);
+    lowerMesh.position.y = -0.12;
+    elbow.add(lowerMesh);
+
+    // Wrist Watch on Left Wrist
+    if (isLeft) {
+      const watchGeo = new THREE.CylinderGeometry(0.048, 0.048, 0.03, 8);
+      const watchMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 });
+      const watch = new THREE.Mesh(watchGeo, watchMat);
+      watch.position.y = -0.20;
+      elbow.add(watch);
+    }
+
+    // Hand
+    const handGeo = new THREE.BoxGeometry(0.05, 0.08, 0.03);
+    const handMesh = new THREE.Mesh(handGeo, handMat);
+    handMesh.position.y = -0.26;
+    elbow.add(handMesh);
+
+    return { shoulder, elbow };
+  }
+
+  buildLeg(parent, xOffset, pantMat, shoeMat) {
+    const hip = new THREE.Group();
+    hip.position.set(xOffset, -0.06, 0);
+    parent.add(hip);
+
+    // Upper Leg (Thigh in slim black jeans)
+    const thighGeo = new THREE.CylinderGeometry(0.08, 0.065, 0.40, 8);
+    const thighMesh = new THREE.Mesh(thighGeo, pantMat);
+    thighMesh.position.y = -0.20;
+    hip.add(thighMesh);
+
+    // Knee Joint
+    const knee = new THREE.Group();
+    knee.position.y = -0.40;
+    hip.add(knee);
+
+    // Calf / Shin
+    const calfGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.40, 8);
+    const calfMesh = new THREE.Mesh(calfGeo, pantMat);
+    calfMesh.position.y = -0.20;
+    knee.add(calfMesh);
+
+    // Ankle & Sneaker
+    const ankle = new THREE.Group();
+    ankle.position.y = -0.40;
+    knee.add(ankle);
+
+    const shoeGeo = new THREE.BoxGeometry(0.09, 0.07, 0.20);
+    const shoeMesh = new THREE.Mesh(shoeGeo, shoeMat);
+    shoeMesh.position.set(0, 0.035, 0.04);
+    ankle.add(shoeMesh);
+
+    // White rubber sole rim
+    const soleGeo = new THREE.BoxGeometry(0.095, 0.02, 0.205);
+    const soleMat = new THREE.MeshStandardMaterial({ color: 0xe4e4e7, roughness: 0.5 });
+    const soleMesh = new THREE.Mesh(soleGeo, soleMat);
+    soleMesh.position.set(0, 0.01, 0.04);
+    ankle.add(soleMesh);
+
+    return { hip, knee, ankle };
+  }
+
+  update(delta, inputState, collisionWalls) {
+    if (this.isSitting) {
+      this.animateSitting(delta);
       return;
     }
 
-    try {
-      const width = this.container.clientWidth || 400;
-      const height = this.container.clientHeight || 280;
+    // 1. Process Input Vector
+    const moveZ = (inputState.forward ? -1 : 0) + (inputState.backward ? 1 : 0);
+    const moveX = (inputState.left ? -1 : 0) + (inputState.right ? 1 : 0);
 
-      this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x070b14);
+    const inputDir = new THREE.Vector3(moveX, 0, moveZ);
+    this.isMoving = inputDir.lengthSq() > 0.001;
+    this.isRunning = inputState.shift && this.isMoving;
 
-      this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-      this.camera.position.set(0, 3.2, 5.5);
-      this.camera.lookAt(0, 0.8, 0);
+    if (this.isMoving) {
+      inputDir.normalize();
 
-      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      this.renderer.setSize(width, height);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      this.container.innerHTML = '';
-      this.container.appendChild(this.renderer.domElement);
+      // Rotate input relative to camera yaw
+      const camYaw = inputState.cameraYaw || 0;
+      inputDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
 
-      // Lights
-      this.ambientLight = new THREE.AmbientLight(0x223344, 1.2);
-      this.scene.add(this.ambientLight);
+      // Target character rotation
+      this.targetRotationY = Math.atan2(inputDir.x, inputDir.z);
 
-      this.neonLight = new THREE.PointLight(0x00f0ff, 2.5, 10);
-      this.neonLight.position.set(0, 2.5, 1.2);
-      this.scene.add(this.neonLight);
+      // Smooth rotate character towards travel direction
+      let diff = this.targetRotationY - this.rotationY;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      this.rotationY += diff * Math.min(1.0, delta * 12.0);
+      this.mesh.rotation.y = this.rotationY;
 
-      const purpleBackLight = new THREE.PointLight(0xa855f7, 2.0, 10);
-      purpleBackLight.position.set(2, 1.8, -2);
-      this.scene.add(purpleBackLight);
+      // Calculate speed
+      const curSpeed = this.moveSpeed * (this.isRunning ? this.runMultiplier : 1.0);
+      const moveDelta = inputDir.multiplyScalar(curSpeed * delta);
 
-      // Build Desk & Setup
-      this.buildBattlestation();
+      // Collision detection against room boundaries & furniture
+      const nextPos = this.position.clone().add(moveDelta);
+      if (this.checkCollision(nextPos, collisionWalls)) {
+        // Slide along X or Z if single axis is clear
+        const slideX = this.position.clone().add(new THREE.Vector3(moveDelta.x, 0, 0));
+        const slideZ = this.position.clone().add(new THREE.Vector3(0, 0, moveDelta.z));
+        if (!this.checkCollision(slideX, collisionWalls)) {
+          this.position.x = slideX.x;
+        } else if (!this.checkCollision(slideZ, collisionWalls)) {
+          this.position.z = slideZ.z;
+        }
+      } else {
+        this.position.copy(nextPos);
+      }
+    }
 
-      // Mouse control
-      this.setupControls();
+    this.mesh.position.copy(this.position);
 
-      // Start loop
-      this.animate();
+    // 2. Run Procedural Animations
+    this.animateLocomotion(delta);
+  }
 
-      window.addEventListener('resize', () => this.onResize());
-    } catch (err) {
-      console.warn('Three.js init error, falling back to 2D canvas', err);
-      this.renderFallback2D();
+  checkCollision(pos, walls) {
+    if (!walls || walls.length === 0) return false;
+    const playerRadius = 0.28;
+
+    for (const w of walls) {
+      // Simple 2D box collision on XZ plane
+      if (pos.x + playerRadius > w.minX && pos.x - playerRadius < w.maxX &&
+          pos.z + playerRadius > w.minZ && pos.z - playerRadius < w.maxZ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  animateLocomotion(delta) {
+    const l = this.limbs;
+    if (!l.leftLeg || !l.rightLeg) return;
+
+    if (this.isMoving) {
+      const animFreq = this.isRunning ? 11.0 : 7.5;
+      this.animTime += delta * animFreq;
+
+      const stride = Math.sin(this.animTime);
+      const strideCos = Math.cos(this.animTime);
+      const amp = this.isRunning ? 0.85 : 0.55;
+
+      // Legs alternating swing
+      l.leftLeg.hip.rotation.x = stride * amp;
+      l.rightLeg.hip.rotation.x = -stride * amp;
+
+      // Knee bending on back-swing
+      l.leftLeg.knee.rotation.x = Math.max(0, -stride * amp * 0.9);
+      l.rightLeg.knee.rotation.x = Math.max(0, stride * amp * 0.9);
+
+      // Arms swing in opposition to legs
+      l.leftArm.shoulder.rotation.x = -stride * (amp * 0.8);
+      l.rightArm.shoulder.rotation.x = stride * (amp * 0.8);
+      l.leftArm.elbow.rotation.x = -0.3 + Math.abs(stride * 0.3);
+      l.rightArm.elbow.rotation.x = -0.3 + Math.abs(stride * 0.3);
+
+      // Subtle pelvis and spine bounce
+      l.pelvis.position.y = 0.92 + Math.abs(strideCos) * 0.04;
+      l.spine.rotation.y = -stride * 0.08;
+      l.spine.rotation.z = stride * 0.03;
+    } else {
+      // Natural Idle breathing
+      this.animTime += delta * 2.2;
+      const breath = Math.sin(this.animTime);
+
+      // Reset legs
+      l.leftLeg.hip.rotation.x = 0;
+      l.rightLeg.hip.rotation.x = 0;
+      l.leftLeg.knee.rotation.x = 0;
+      l.rightLeg.knee.rotation.x = 0;
+      l.pelvis.position.y = 0.92;
+
+      // Subtle arm idle sway
+      l.leftArm.shoulder.rotation.x = 0.05 + breath * 0.02;
+      l.leftArm.shoulder.rotation.z = -0.08;
+      l.rightArm.shoulder.rotation.x = 0.05 + breath * 0.02;
+      l.rightArm.shoulder.rotation.z = 0.08;
+      l.leftArm.elbow.rotation.x = -0.15;
+      l.rightArm.elbow.rotation.x = -0.15;
+
+      // Chest breathing
+      l.spine.rotation.x = breath * 0.02;
+      l.head.rotation.y = Math.sin(this.animTime * 0.4) * 0.08;
     }
   }
 
-  buildBattlestation() {
-    this.deskGroup = new THREE.Group();
+  setSitting(isSitting, chairPos, chairRotY) {
+    this.isSitting = isSitting;
+    const l = this.limbs;
+    if (isSitting && chairPos) {
+      this.position.set(chairPos.x, 0, chairPos.z);
+      this.rotationY = chairRotY || 0;
+      this.mesh.position.copy(this.position);
+      this.mesh.rotation.y = this.rotationY;
 
-    // 1. Floor grid
-    const floorGeo = new THREE.PlaneGeometry(8, 8);
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x0a101d, roughness: 0.8 });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = 0;
-    this.deskGroup.add(floor);
+      // Sit pose: hips flexed 90 deg, knees bent 90 deg, hands on desk
+      l.pelvis.position.y = 0.58;
+      l.leftLeg.hip.rotation.x = -Math.PI / 2;
+      l.rightLeg.hip.rotation.x = -Math.PI / 2;
+      l.leftLeg.knee.rotation.x = Math.PI / 2;
+      l.rightLeg.knee.rotation.x = Math.PI / 2;
 
-    // 2. Desk Top
-    const deskGeo = new THREE.BoxGeometry(3.0, 0.1, 1.4);
-    const deskMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
-    const desk = new THREE.Mesh(deskGeo, deskMat);
-    desk.position.set(0, 1.3, 0);
-    this.deskGroup.add(desk);
+      l.leftArm.shoulder.rotation.x = -0.9;
+      l.rightArm.shoulder.rotation.x = -0.9;
+      l.leftArm.elbow.rotation.x = -0.8;
+      l.rightArm.elbow.rotation.x = -0.8;
+    } else {
+      l.pelvis.position.y = 0.92;
+      l.leftLeg.hip.rotation.x = 0;
+      l.rightLeg.hip.rotation.x = 0;
+      l.leftLeg.knee.rotation.x = 0;
+      l.rightLeg.knee.rotation.x = 0;
+    }
+  }
 
-    // Desk Legs
-    const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.3);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 });
-    const legPositions = [
-      [-1.4, 0.65, -0.6],
-      [1.4, 0.65, -0.6],
-      [-1.4, 0.65, 0.6],
-      [1.4, 0.65, 0.6],
-    ];
-    legPositions.forEach(pos => {
-      const leg = new THREE.Mesh(legGeo, legMat);
-      leg.position.set(...pos);
-      this.deskGroup.add(leg);
+  animateSitting(delta) {
+    this.animTime += delta * 12.0;
+    // Rapid typing finger/elbow animation
+    this.limbs.leftArm.elbow.rotation.x = -0.8 + Math.sin(this.animTime) * 0.06;
+    this.limbs.rightArm.elbow.rotation.x = -0.8 + Math.cos(this.animTime * 1.2) * 0.06;
+  }
+}
+
+// ==========================================
+// MODULE: js/3d/bedroom.js
+// ==========================================
+// 3D Bedroom Environment for CODE LEGACY
+// Matches Image 2: Cozy Modern Gaming Bedroom, Battlestation Desk, Bed with Under-LEDs, Window, Ergonomic Chair
+
+class Bedroom3D {
+  constructor(scene) {
+    this.scene = scene;
+    this.roomGroup = new THREE.Group();
+    this.roomGroup.name = "BedroomEnvironment";
+
+    // Collision Boundaries (Bounding boxes for walls & furniture)
+    this.collisionBoxes = [];
+
+    // Interactive Trigger Zones
+    this.triggers = [];
+
+    // Screen emissive material to update dynamically
+    this.screenMaterials = [];
+
+    this.buildRoom();
+    this.scene.add(this.roomGroup);
+  }
+
+  buildRoom() {
+    // Dimensions: 5.6m width (X: -2.8 to 2.8), 5.2m depth (Z: -2.6 to 2.6), 3.0m height
+    const roomW = 5.6;
+    const roomD = 5.2;
+    const roomH = 3.0;
+
+    // === MATERIALS ===
+    // Light Oak Parquet Floor
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0xc8b59e,
+      roughness: 0.45,
+      metalness: 0.05
     });
 
-    // 3. Laptop or Multi-Monitors depending on state
-    this.updateGearMeshes();
+    // Dark Slate Accent Wall (behind desk & bed)
+    const slateWallMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.85
+    });
 
-    // 4. Keyboard
-    const kbGeo = new THREE.BoxGeometry(0.7, 0.03, 0.25);
-    const kbMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 });
-    const kb = new THREE.Mesh(kbGeo, kbMat);
-    kb.position.set(0, 1.37, 0.3);
-    this.deskGroup.add(kb);
+    // Warm Off-White Wall
+    const whiteWallMat = new THREE.MeshStandardMaterial({
+      color: 0xeeeff2,
+      roughness: 0.9
+    });
 
-    // 5. Coffee Mug
-    const mugGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.12);
-    const mugMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, roughness: 0.2 });
-    const mug = new THREE.Mesh(mugGeo, mugMat);
-    mug.position.set(0.9, 1.41, 0.2);
-    this.deskGroup.add(mug);
+    // Warm Oak Wood (for shelves, desk top, bed base)
+    const oakMat = new THREE.MeshStandardMaterial({
+      color: 0x9a7b56,
+      roughness: 0.55
+    });
 
-    // Initial rotation
-    this.deskGroup.rotation.y = this.rotationY;
-    this.deskGroup.rotation.x = this.rotationX;
-    this.scene.add(this.deskGroup);
+    // Matt Dark Gray (for cabinets, frames)
+    const cabinetMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.6
+    });
+
+    // 1. FLOOR
+    const floorGeo = new THREE.PlaneGeometry(roomW, roomD);
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    this.roomGroup.add(floor);
+
+    // 2. CEILING
+    const ceilingGeo = new THREE.PlaneGeometry(roomW, roomD);
+    const ceiling = new THREE.Mesh(ceilingGeo, whiteWallMat);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = roomH;
+    this.roomGroup.add(ceiling);
+
+    // Ceiling Recessed Light Panel
+    const lightPanelGeo = new THREE.BoxGeometry(1.6, 0.04, 1.2);
+    const lightPanelMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xfff3e0,
+      emissiveIntensity: 0.9
+    });
+    const lightPanel = new THREE.Mesh(lightPanelGeo, lightPanelMat);
+    lightPanel.position.set(0, roomH - 0.02, 0);
+    this.roomGroup.add(lightPanel);
+
+    // Ceiling Ambient Light Source
+    const ceilingPointLight = new THREE.PointLight(0xffeedd, 1.8, 8.0);
+    ceilingPointLight.position.set(0, roomH - 0.2, 0);
+    ceilingPointLight.castShadow = true;
+    ceilingPointLight.shadow.mapSize.width = 1024;
+    ceilingPointLight.shadow.mapSize.height = 1024;
+    ceilingPointLight.shadow.bias = -0.002;
+    this.roomGroup.add(ceilingPointLight);
+
+    // 3. WALLS
+    // Back Wall (Z = -roomD/2 = -2.6) - Slate Accent Wall with Window
+    const backWallLeft = new THREE.Mesh(new THREE.BoxGeometry(3.0, roomH, 0.1), slateWallMat);
+    backWallLeft.position.set(-1.3, roomH / 2, -roomD / 2);
+    backWallLeft.receiveShadow = true;
+    this.roomGroup.add(backWallLeft);
+
+    const backWallRight = new THREE.Mesh(new THREE.BoxGeometry(1.2, roomH, 0.1), slateWallMat);
+    backWallRight.position.set(2.2, roomH / 2, -roomD / 2);
+    backWallRight.receiveShadow = true;
+    this.roomGroup.add(backWallRight);
+
+    // Window (between back walls, from X = 0.2 to 1.6, Y = 1.0 to 2.4)
+    const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.12), whiteWallMat);
+    windowFrame.position.set(1.0, 1.7, -roomD / 2);
+    this.roomGroup.add(windowFrame);
+
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x88bbdd,
+      emissive: 0xddeeff,
+      emissiveIntensity: 0.6,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.75
+    });
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.25), glassMat);
+    glass.position.set(1.0, 1.7, -roomD / 2 + 0.04);
+    this.roomGroup.add(glass);
+
+    // Sunlight streaming through window
+    const sunLight = new THREE.DirectionalLight(0xffeedd, 1.4);
+    sunLight.position.set(2.0, 4.0, -5.0);
+    sunLight.target.position.set(0, 0.5, 0);
+    sunLight.castShadow = true;
+    this.roomGroup.add(sunLight);
+    this.roomGroup.add(sunLight.target);
+
+    // Left Wall (X = -roomW/2 = -2.8) - Behind Desk
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomH, roomD), slateWallMat);
+    leftWall.position.set(-roomW / 2, roomH / 2, 0);
+    leftWall.receiveShadow = true;
+    this.roomGroup.add(leftWall);
+
+    // Right Wall (X = roomW/2 = 2.8) - Wardrobe side
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomH, roomD), whiteWallMat);
+    rightWall.position.set(roomW / 2, roomH / 2, 0);
+    rightWall.receiveShadow = true;
+    this.roomGroup.add(rightWall);
+
+    // Front Wall (Z = roomD/2 = 2.6) with Doorway
+    const frontWallLeft = new THREE.Mesh(new THREE.BoxGeometry(2.0, roomH, 0.1), whiteWallMat);
+    frontWallLeft.position.set(-1.8, roomH / 2, roomD / 2);
+    this.roomGroup.add(frontWallLeft);
+
+    const frontWallRight = new THREE.Mesh(new THREE.BoxGeometry(2.4, roomH, 0.1), whiteWallMat);
+    frontWallRight.position.set(1.6, roomH / 2, roomD / 2);
+    this.roomGroup.add(frontWallRight);
+
+    // Door Frame (from X = -0.8 to 0.4)
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.12), cabinetMat);
+    doorFrame.position.set(-0.2, 1.1, roomD / 2);
+    this.roomGroup.add(doorFrame);
+
+    // Outer Walls Collision
+    this.collisionBoxes.push(
+      { minX: -roomW / 2 - 0.2, maxX: -roomW / 2 + 0.1, minZ: -roomD / 2, maxZ: roomD / 2 }, // Left
+      { minX: roomW / 2 - 0.1, maxX: roomW / 2 + 0.2, minZ: -roomD / 2, maxZ: roomD / 2 },  // Right
+      { minX: -roomW / 2, maxX: roomW / 2, minZ: -roomD / 2 - 0.2, maxZ: -roomD / 2 + 0.1 }, // Back
+      { minX: -roomW / 2, maxX: roomW / 2, minZ: roomD / 2 - 0.1, maxZ: roomD / 2 + 0.3 }   // Front
+    );
+
+    // 4. FURNITURE: BATTLESTATION DESK SETUP (Matching Image 2)
+    this.buildBattlestation(oakMat, cabinetMat);
+
+    // 5. FURNITURE: PLATFORM BED (Matching Image 2)
+    this.buildPlatformBed(oakMat, cabinetMat);
+
+    // 6. FURNITURE: WARDROBE & STORAGE CABINETS
+    this.buildWardrobe(cabinetMat, oakMat);
+
+    // 7. SETUP INTERACTIVE TRIGGERS
+    this.setupTriggers();
   }
 
-  updateGearMeshes() {
-    if (!this.deskGroup) return;
+  buildBattlestation(oakMat, cabinetMat) {
+    const deskGroup = new THREE.Group();
+    // Placed along the left wall (X ~ -1.7, Z ~ -1.2)
+    deskGroup.position.set(-1.7, 0, -1.2);
 
-    if (this.laptopMesh) this.deskGroup.remove(this.laptopMesh);
-    if (this.monitorMesh) this.deskGroup.remove(this.monitorMesh);
+    // Desk Top (Length 2.2m, Width 0.8m, Height 0.74m)
+    const topGeo = new THREE.BoxGeometry(2.2, 0.05, 0.8);
+    const topMesh = new THREE.Mesh(topGeo, oakMat);
+    topMesh.position.set(0, 0.74, 0);
+    topMesh.castShadow = true;
+    topMesh.receiveShadow = true;
+    deskGroup.add(topMesh);
 
-    const equipped = state.data.equipped;
+    // Desk Drawers Unit (on the left side of desk)
+    const drawerGeo = new THREE.BoxGeometry(0.55, 0.70, 0.75);
+    const drawerMesh = new THREE.Mesh(drawerGeo, cabinetMat);
+    drawerMesh.position.set(-0.8, 0.35, 0);
+    drawerMesh.castShadow = true;
+    deskGroup.add(drawerMesh);
 
-    if (equipped.monitor === 'mon_dual_4k') {
-      // Dual 4K Curved Screens
-      const monGroup = new THREE.Group();
-      [-0.7, 0.7].forEach((xPos, idx) => {
-        const screenGeo = new THREE.BoxGeometry(1.2, 0.7, 0.04);
-        const screenMat = new THREE.MeshStandardMaterial({ 
-          color: 0x050505, 
-          emissive: idx === 0 ? 0x00f0ff : 0xa855f7, 
-          emissiveIntensity: 0.4 
-        });
-        const screen = new THREE.Mesh(screenGeo, screenMat);
-        screen.position.set(xPos, 1.9, -0.2);
-        screen.rotation.y = idx === 0 ? 0.15 : -0.15;
-        monGroup.add(screen);
+    // Right Desk Legs (Metal Frame)
+    const legGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8 });
+    const legR1 = new THREE.Mesh(legGeo, legMat);
+    legR1.position.set(0.95, 0.36, -0.32);
+    const legR2 = new THREE.Mesh(legGeo, legMat);
+    legR2.position.set(0.95, 0.36, 0.32);
+    deskGroup.add(legR1);
+    deskGroup.add(legR2);
+
+    // Overhead Floating Wall Cabinets & LED Light Bar (Image 2)
+    const wallCabGeo = new THREE.BoxGeometry(2.2, 0.45, 0.35);
+    const wallCab = new THREE.Mesh(wallCabGeo, cabinetMat);
+    wallCab.position.set(0, 2.2, -0.22);
+    wallCab.castShadow = true;
+    deskGroup.add(wallCab);
+
+    // Cyan LED Light Bar under cabinet
+    const ledBarGeo = new THREE.BoxGeometry(2.0, 0.02, 0.02);
+    const ledBarMat = new THREE.MeshStandardMaterial({
+      color: 0x00f0ff,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 1.5
+    });
+    const ledBar = new THREE.Mesh(ledBarGeo, ledBarMat);
+    ledBar.position.set(0, 1.95, -0.22);
+    deskGroup.add(ledBar);
+
+    // Ambient Cyan Glow from Desk LED
+    const deskLedLight = new THREE.PointLight(0x00f0ff, 1.2, 2.5);
+    deskLedLight.position.set(0, 1.9, -0.15);
+    deskGroup.add(deskLedLight);
+
+    // DUAL MONITORS (Matching Image 2)
+    [-0.38, 0.38].forEach((xOffset, idx) => {
+      // Monitor Stand Arm
+      const armGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.35, 8);
+      const arm = new THREE.Mesh(armGeo, legMat);
+      arm.position.set(xOffset * 0.4, 0.92, -0.25);
+      deskGroup.add(arm);
+
+      // Screen Frame
+      const frameGeo = new THREE.BoxGeometry(0.68, 0.42, 0.03);
+      const frame = new THREE.Mesh(frameGeo, legMat);
+      frame.position.set(xOffset, 1.15, -0.2);
+      frame.rotation.y = idx === 0 ? 0.12 : -0.12;
+      frame.castShadow = true;
+      deskGroup.add(frame);
+
+      // Glowing Display
+      const screenGeo = new THREE.PlaneGeometry(0.64, 0.38);
+      const screenMat = new THREE.MeshStandardMaterial({
+        color: 0x090d16,
+        emissive: idx === 0 ? 0x00f0ff : 0xa855f7,
+        emissiveIntensity: 0.55,
+        roughness: 0.2
       });
-      this.monitorMesh = monGroup;
-      this.deskGroup.add(this.monitorMesh);
-    } else {
-      // Laptop model
-      const baseGeo = new THREE.BoxGeometry(0.65, 0.03, 0.45);
-      const baseMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6 });
-      const base = new THREE.Mesh(baseGeo, baseMat);
-      base.position.set(0, 1.37, 0);
-
-      const screenGeo = new THREE.BoxGeometry(0.65, 0.45, 0.02);
-      const screenMat = new THREE.MeshStandardMaterial({ 
-        color: 0x020617, 
-        emissive: 0x00f0ff, 
-        emissiveIntensity: 0.35 
-      });
+      this.screenMaterials.push(screenMat);
       const screen = new THREE.Mesh(screenGeo, screenMat);
-      screen.position.set(0, 1.58, -0.2);
-      screen.rotation.x = -0.15;
+      screen.position.set(xOffset, 1.15, -0.183);
+      screen.rotation.y = idx === 0 ? 0.12 : -0.12;
+      deskGroup.add(screen);
+    });
 
-      const lapGroup = new THREE.Group();
-      lapGroup.add(base);
-      lapGroup.add(screen);
-      this.laptopMesh = lapGroup;
-      this.deskGroup.add(this.laptopMesh);
+    // RGB Mechanical Keyboard & Mouse
+    const kbGeo = new THREE.BoxGeometry(0.46, 0.015, 0.16);
+    const kbMat = new THREE.MeshStandardMaterial({
+      color: 0x18181b,
+      emissive: 0x00f0ff,
+      emissiveIntensity: 0.2,
+      roughness: 0.3
+    });
+    const kb = new THREE.Mesh(kbGeo, kbMat);
+    kb.position.set(0, 0.77, 0.08);
+    deskGroup.add(kb);
+
+    const mouseGeo = new THREE.BoxGeometry(0.07, 0.025, 0.11);
+    const mouse = new THREE.Mesh(mouseGeo, legMat);
+    mouse.position.set(0.36, 0.77, 0.08);
+    deskGroup.add(mouse);
+
+    // Large Extended Mousepad
+    const padGeo = new THREE.BoxGeometry(0.9, 0.005, 0.35);
+    const padMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8 });
+    const pad = new THREE.Mesh(padGeo, padMat);
+    pad.position.set(0.12, 0.765, 0.08);
+    deskGroup.add(pad);
+
+    // Desktop PC Tower (Glass side panel with glowing fan)
+    const pcGeo = new THREE.BoxGeometry(0.24, 0.45, 0.48);
+    const pcMat = new THREE.MeshStandardMaterial({ color: 0x09090b, metalness: 0.6 });
+    const pc = new THREE.Mesh(pcGeo, pcMat);
+    pc.position.set(-0.85, 0.98, -0.05);
+    pc.castShadow = true;
+    deskGroup.add(pc);
+
+    // ERGONOMIC CHAIR (Herman Miller Aeron Style from Image 2)
+    const chairGroup = new THREE.Group();
+    chairGroup.position.set(0, 0, 0.65);
+
+    // Chair 5-Star Base
+    const baseCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 8), legMat);
+    baseCenter.position.y = 0.1;
+    chairGroup.add(baseCenter);
+
+    // Gas lift cylinder
+    const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8), legMat);
+    cylinder.position.y = 0.28;
+    chairGroup.add(cylinder);
+
+    // Mesh Seat Pan
+    const seatMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.46), seatMat);
+    seat.position.y = 0.46;
+    seat.castShadow = true;
+    chairGroup.add(seat);
+
+    // High Ergonomic Mesh Backrest
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.55, 0.04), seatMat);
+    back.position.set(0, 0.75, 0.20);
+    back.rotation.x = -0.15;
+    back.castShadow = true;
+    chairGroup.add(back);
+
+    // Armrests
+    [-0.25, 0.25].forEach(x => {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.22), legMat);
+      arm.position.set(x, 0.58, 0.05);
+      chairGroup.add(arm);
+    });
+
+    deskGroup.add(chairGroup);
+    this.roomGroup.add(deskGroup);
+
+    // Desk Collision Box
+    this.collisionBoxes.push({
+      minX: -2.8,
+      maxX: -0.6,
+      minZ: -1.7,
+      maxZ: -0.7
+    });
+  }
+
+  buildPlatformBed(oakMat, cabinetMat) {
+    const bedGroup = new THREE.Group();
+    // Placed on back-right (X ~ 1.0, Z ~ -1.5) under the window
+    bedGroup.position.set(1.0, 0, -1.5);
+
+    // Wooden Platform Base with drawers (2.1m Length, 1.3m Width, 0.45m Height)
+    const baseGeo = new THREE.BoxGeometry(1.3, 0.45, 2.1);
+    const base = new THREE.Mesh(baseGeo, oakMat);
+    base.position.set(0, 0.225, 0);
+    base.castShadow = true;
+    base.receiveShadow = true;
+    bedGroup.add(base);
+
+    // Under-bed Amber Warm LED Strip (Image 2)
+    const ledStripGeo = new THREE.BoxGeometry(1.2, 0.02, 2.0);
+    const ledStripMat = new THREE.MeshStandardMaterial({
+      color: 0xffaa44,
+      emissive: 0xffaa44,
+      emissiveIntensity: 1.6
+    });
+    const ledStrip = new THREE.Mesh(ledStripGeo, ledStripMat);
+    ledStrip.position.set(0, 0.04, 0);
+    bedGroup.add(ledStrip);
+
+    const underBedLight = new THREE.PointLight(0xffaa44, 1.4, 2.0);
+    underBedLight.position.set(0, 0.15, 0.2);
+    bedGroup.add(underBedLight);
+
+    // Comfortable Mattress
+    const mattressGeo = new THREE.BoxGeometry(1.2, 0.22, 2.0);
+    const mattressMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
+    const mattress = new THREE.Mesh(mattressGeo, mattressMat);
+    mattress.position.set(0, 0.55, 0);
+    bedGroup.add(mattress);
+
+    // Navy Blue Duvet Blanket (Image 2)
+    const duvetGeo = new THREE.BoxGeometry(1.22, 0.12, 1.4);
+    const duvetMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
+    const duvet = new THREE.Mesh(duvetGeo, duvetMat);
+    duvet.position.set(0, 0.66, 0.28);
+    duvet.castShadow = true;
+    bedGroup.add(duvet);
+
+    // Soft Pillow
+    const pillowGeo = new THREE.BoxGeometry(0.7, 0.12, 0.42);
+    const pillow = new THREE.Mesh(pillowGeo, mattressMat);
+    pillow.position.set(0, 0.68, -0.72);
+    pillow.rotation.x = 0.1;
+    bedGroup.add(pillow);
+
+    this.roomGroup.add(bedGroup);
+
+    // Bed Collision Box
+    this.collisionBoxes.push({
+      minX: 0.3,
+      maxX: 1.7,
+      minZ: -2.6,
+      maxZ: -0.4
+    });
+  }
+
+  buildWardrobe(cabinetMat, oakMat) {
+    // Tall Wardrobe on right corner (X: 2.1 to 2.7, Z: 0.5 to 2.5)
+    const wardrobeGeo = new THREE.BoxGeometry(0.65, 2.7, 2.0);
+    const wardrobe = new THREE.Mesh(wardrobeGeo, cabinetMat);
+    wardrobe.position.set(2.4, 1.35, 1.4);
+    wardrobe.castShadow = true;
+    this.roomGroup.add(wardrobe);
+
+    // Bookshelves with books (X: 0.5 to 1.7, Z: -2.5)
+    const shelfGeo = new THREE.BoxGeometry(1.2, 0.04, 0.25);
+    [1.6, 2.0, 2.4].forEach(yPos => {
+      const shelf = new THREE.Mesh(shelfGeo, oakMat);
+      shelf.position.set(0.0, yPos, -2.4);
+      shelf.castShadow = true;
+      this.roomGroup.add(shelf);
+    });
+
+    // Wardrobe Collision
+    this.collisionBoxes.push({
+      minX: 2.0,
+      maxX: 2.8,
+      minZ: 0.3,
+      maxZ: 2.5
+    });
+  }
+
+  setupTriggers() {
+    // 1. PC Battlestation Trigger
+    this.triggers.push({
+      id: "pc_desk",
+      name: "Máy tính Battlestation",
+      prompt: "[ E ] Sử Dụng Máy Tính (Học Code & Dự Án)",
+      position: new THREE.Vector3(-1.7, 0, -0.6),
+      radius: 1.3,
+      action: "open_pc"
+    });
+
+    // 2. Bed Trigger (Sleep)
+    this.triggers.push({
+      id: "bed_sleep",
+      name: "Giường ngủ",
+      prompt: "[ E ] Đi Ngủ (Hồi phục 100% Năng Lượng)",
+      position: new THREE.Vector3(0.6, 0, -1.0),
+      radius: 1.4,
+      action: "sleep"
+    });
+
+    // 3. Bookshelf Trigger
+    this.triggers.push({
+      id: "bookshelf",
+      name: "Tủ sách công nghệ",
+      prompt: "[ E ] Đọc Sách Clean Code & Kiến Trúc",
+      position: new THREE.Vector3(0.0, 0, -2.0),
+      radius: 1.1,
+      action: "read_book"
+    });
+
+    // 4. Doorway Trigger (To Campus)
+    this.triggers.push({
+      id: "room_door",
+      name: "Cửa phòng trọ",
+      prompt: "[ E ] Ra Khuôn Viên Đại Học (Campus)",
+      position: new THREE.Vector3(-0.2, 0, 2.2),
+      radius: 1.2,
+      action: "exit_room"
+    });
+  }
+
+  getCollisionBoxes() {
+    return this.collisionBoxes;
+  }
+
+  getTriggers() {
+    return this.triggers;
+  }
+
+  update(delta) {
+    // Subtle pulsating glow on monitors
+    const time = performance.now() * 0.003;
+    this.screenMaterials.forEach((mat, idx) => {
+      mat.emissiveIntensity = 0.5 + Math.sin(time + idx * 2.0) * 0.15;
+    });
+  }
+}
+
+// ==========================================
+// MODULE: js/3d/npc.js
+// ==========================================
+// 3D NPC Engine for CODE LEGACY
+// Renders Mentor Minh standing near the hallway/door with animated quest marker
+
+class NPC3D {
+  constructor(scene, options) {
+    this.scene = scene;
+    this.id = options.id || "mentor_minh";
+    this.name = options.name || "Minh Mentor";
+    this.role = options.role || "Senior Principal Engineer";
+    this.position = options.position || new THREE.Vector3(0.8, 0, 1.8);
+    this.rotationY = options.rotationY || -Math.PI * 0.75;
+
+    this.mesh = new THREE.Group();
+    this.mesh.name = `NPC_${this.id}`;
+    this.mesh.position.copy(this.position);
+    this.mesh.rotation.y = this.rotationY;
+
+    this.animTime = 0;
+    this.overheadMarker = null;
+
+    this.buildNPCModel();
+    this.scene.add(this.mesh);
+  }
+
+  buildNPCModel() {
+    // Mature Tech Lead style: Blazer, polo, smart trousers
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdfd0, roughness: 0.6 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.8 });
+    const blazerMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+
+    // Pelvis & Legs
+    const pelvis = new THREE.Group();
+    pelvis.position.y = 0.95;
+    this.mesh.add(pelvis);
+
+    const pelvisMesh = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.22), pantsMat);
+    pelvis.add(pelvisMesh);
+
+    // Legs
+    [-0.10, 0.10].forEach(x => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.88, 8), pantsMat);
+      leg.position.set(x, -0.48, 0);
+      leg.castShadow = true;
+      pelvis.add(leg);
+
+      const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.22), shoeMat);
+      shoe.position.set(x, -0.92, 0.04);
+      pelvis.add(shoe);
+    });
+
+    // Torso with Smart Blazer
+    const spine = new THREE.Group();
+    spine.position.y = 0.15;
+    pelvis.add(spine);
+    this.spine = spine;
+
+    const chest = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.40, 0.25), blazerMat);
+    chest.position.y = 0.20;
+    chest.castShadow = true;
+    spine.add(chest);
+
+    // Arms in polite cross-chest or relaxed leader pose
+    [-0.24, 0.24].forEach((x, idx) => {
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.52, 8), blazerMat);
+      arm.position.set(x, 0.15, 0.04);
+      arm.rotation.x = -0.2;
+      arm.rotation.z = idx === 0 ? 0.1 : -0.1;
+      spine.add(arm);
+    });
+
+    // Head with neat professional hairstyle & glasses
+    const headGroup = new THREE.Group();
+    headGroup.position.y = 0.44;
+    spine.add(headGroup);
+    this.head = headGroup;
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), skinMat);
+    head.scale.set(0.9, 1.15, 1.0);
+    head.castShadow = true;
+    headGroup.add(head);
+
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 14), hairMat);
+    hair.scale.set(0.95, 1.12, 1.05);
+    hair.position.set(0, 0.04, -0.01);
+    headGroup.add(hair);
+
+    // Glasses Rim
+    const glassesMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, metalness: 0.9, roughness: 0.2 });
+    const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.02), glassesMat);
+    glasses.position.set(0, 0.02, 0.11);
+    headGroup.add(glasses);
+
+    // Animated Overhead Quest Indicator [ ! ]
+    const markerGroup = new THREE.Group();
+    markerGroup.position.y = 1.95;
+    this.overheadMarker = markerGroup;
+
+    const ringGeo = new THREE.RingGeometry(0.12, 0.16, 16);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    markerGroup.add(ring);
+
+    const pointGeo = new THREE.ConeGeometry(0.08, 0.20, 8);
+    const pointMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 1.2 });
+    const point = new THREE.Mesh(pointGeo, pointMat);
+    point.rotation.x = Math.PI;
+    point.position.y = -0.05;
+    markerGroup.add(point);
+
+    this.mesh.add(markerGroup);
+  }
+
+  update(delta, playerPos) {
+    this.animTime += delta;
+
+    // Overhead indicator floating bounce & rotation
+    if (this.overheadMarker) {
+      this.overheadMarker.position.y = 1.95 + Math.sin(this.animTime * 3.0) * 0.06;
+      this.overheadMarker.rotation.y += delta * 2.0;
+    }
+
+    // Subtle idle breathing
+    if (this.spine) {
+      this.spine.rotation.x = Math.sin(this.animTime * 1.8) * 0.02;
+    }
+
+    // Head tracking player if close
+    if (playerPos && this.head) {
+      const dist = this.mesh.position.distanceTo(playerPos);
+      if (dist < 3.2) {
+        const localPlayerPos = this.mesh.worldToLocal(playerPos.clone());
+        const angle = Math.atan2(localPlayerPos.x, localPlayerPos.z);
+        this.head.rotation.y = THREE.MathUtils.clamp(angle, -0.8, 0.8);
+      } else {
+        this.head.rotation.y = THREE.MathUtils.lerp(this.head.rotation.y, 0, delta * 3.0);
+      }
     }
   }
 
-  setupControls() {
-    const el = this.renderer.domElement;
-    el.style.cursor = 'grab';
+  getTrigger() {
+    return {
+      id: "npc_minh",
+      name: this.name,
+      prompt: `[ E ] Trò Chuyện Cùng ${this.name} (${this.role})`,
+      position: this.position.clone(),
+      radius: 1.6,
+      action: "talk_npc"
+    };
+  }
+}
 
-    el.addEventListener('mousedown', (e) => {
-      this.isDragging = true;
-      this.prevMouseX = e.clientX;
-      this.prevMouseY = e.clientY;
-      el.style.cursor = 'grabbing';
+// ==========================================
+// MODULE: js/3d/cameraController.js
+// ==========================================
+// Third-Person Follow Camera Controller for CODE LEGACY
+// Smooth Spring Follow, Mouse Orbit, Scroll Zoom
+
+class ThirdPersonCamera {
+  constructor(camera, targetMesh) {
+    this.camera = camera;
+    this.targetMesh = targetMesh;
+
+    // Orbit Angles
+    this.yaw = 0;       // Horizontal orbit (radians)
+    this.pitch = 0.32;  // Vertical tilt (radians)
+    this.distance = 3.6; // Distance from character
+    this.minDistance = 1.8;
+    this.maxDistance = 6.0;
+
+    // Target tracking offset
+    this.lookOffset = new THREE.Vector3(0, 1.45, 0); // Focus on upper chest/neck
+
+    // Mouse control state
+    this.isDragging = false;
+    this.prevMouseX = 0;
+    this.prevMouseY = 0;
+
+    // Current smoothed position
+    this.currentPosition = new THREE.Vector3();
+    this.currentLookAt = new THREE.Vector3();
+
+    this.setupMouseEvents();
+  }
+
+  setupMouseEvents() {
+    window.addEventListener('mousedown', (e) => {
+      // Only drag if not clicking UI modals or inputs
+      if (e.target.tagName === 'CANVAS' || e.target.id === 'game-canvas-overlay') {
+        this.isDragging = true;
+        this.prevMouseX = e.clientX;
+        this.prevMouseY = e.clientY;
+      }
     });
 
     window.addEventListener('mouseup', () => {
       this.isDragging = false;
-      if (el) el.style.cursor = 'grab';
     });
 
-    el.addEventListener('mousemove', (e) => {
-      if (!this.isDragging || !this.deskGroup) return;
+    window.addEventListener('mousemove', (e) => {
+      if (!this.isDragging) return;
       const deltaX = e.clientX - this.prevMouseX;
       const deltaY = e.clientY - this.prevMouseY;
-      this.rotationY += deltaX * 0.008;
-      this.rotationX = Math.max(0.05, Math.min(0.6, this.rotationX + deltaY * 0.006));
-      this.deskGroup.rotation.y = this.rotationY;
-      this.deskGroup.rotation.x = this.rotationX;
+
+      this.yaw -= deltaX * 0.006;
+      this.pitch = THREE.MathUtils.clamp(this.pitch - deltaY * 0.005, 0.05, 1.15);
+
       this.prevMouseX = e.clientX;
       this.prevMouseY = e.clientY;
     });
+
+    window.addEventListener('wheel', (e) => {
+      this.distance = THREE.MathUtils.clamp(
+        this.distance + e.deltaY * 0.003,
+        this.minDistance,
+        this.maxDistance
+      );
+    }, { passive: true });
   }
 
-  onResize() {
-    if (!this.container || !this.renderer || !this.camera) return;
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+  update(delta) {
+    if (!this.targetMesh) return;
+
+    // Target point to look at
+    const targetPoint = this.targetMesh.position.clone().add(this.lookOffset);
+
+    // Compute desired camera position on spherical coordinate offset
+    const cosPitch = Math.cos(this.pitch);
+    const sinPitch = Math.sin(this.pitch);
+    const sinYaw = Math.sin(this.yaw);
+    const cosYaw = Math.cos(this.yaw);
+
+    const desiredOffset = new THREE.Vector3(
+      this.distance * sinYaw * cosPitch,
+      this.distance * sinPitch,
+      this.distance * cosYaw * cosPitch
+    );
+
+    const desiredPosition = targetPoint.clone().add(desiredOffset);
+
+    // Prevent camera dipping below floor
+    if (desiredPosition.y < 0.4) desiredPosition.y = 0.4;
+
+    // Smooth lerp camera movement (Spring-damper feel)
+    const lerpFactor = Math.min(1.0, delta * 8.0);
+    this.camera.position.lerp(desiredPosition, lerpFactor);
+    this.currentLookAt.lerp(targetPoint, lerpFactor);
+    this.camera.lookAt(this.currentLookAt);
+  }
+
+  getYaw() {
+    return this.yaw;
+  }
+}
+
+// ==========================================
+// MODULE: js/3d/game3d.js
+// ==========================================
+// Master 3D Game Engine for CODE LEGACY
+// Integrates Fullscreen WebGL 3D, Character Controller, Room Environment, Third-person Camera, Triggers, and Audio Footsteps
+
+
+
+
+
+
+
+
+
+
+class Game3D {
+  constructor(canvasId) {
+    this.canvasId = canvasId;
+    this.canvas = document.getElementById(canvasId);
+
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+
+    this.player = null;
+    this.bedroom = null;
+    this.npc = null;
+    this.tpCamera = null;
+
+    // Input state
+    this.keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false,
+      shift: false,
+      jump: false,
+      cameraYaw: 0
+    };
+
+    // Interaction state
+    this.activeTrigger = null;
+    this.promptElement = document.getElementById('interaction-prompt');
+
+    // Footstep audio timer
+    this.footstepTimer = 0;
+
+    // Clock
+    this.clock = new THREE.Clock();
+    this.isRunning = false;
+  }
+
+  init() {
+    if (!this.canvas) return;
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // 1. Scene
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x070b14);
+    this.scene.fog = new THREE.FogExp2(0x070b14, 0.04);
+
+    // 2. Camera
+    this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 100);
+    this.camera.position.set(0, 2.5, 4.0);
+
+    // 3. Renderer
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.1;
+
+    // 4. Build Environment & World
+    this.bedroom = new Bedroom3D(this.scene);
+
+    // 5. Build Player Character (Starts in middle of room)
+    this.player = new Character3D(this.scene);
+    this.player.position.set(0, 0, 0.4);
+
+    // 6. Build NPC (Minh Mentor standing near hallway)
+    this.npc = new NPC3D(this.scene, {
+      id: "mentor_minh",
+      name: "Minh Mentor",
+      role: "Senior Principal Engineer",
+      position: new THREE.Vector3(0.6, 0, 1.7),
+      rotationY: -Math.PI * 0.75
+    });
+
+    // 7. Third-Person Follow Camera
+    this.tpCamera = new ThirdPersonCamera(this.camera, this.player.mesh);
+
+    // 8. Event Listeners (Keyboard & Window Resize)
+    this.setupKeyboardInput();
+    window.addEventListener('resize', () => this.onWindowResize());
+
+    // 9. Start Loop
+    this.isRunning = true;
+    this.animate();
+
+    console.log("🎮 3D RPG Game Engine Initialized Successfully!");
+  }
+
+  setupKeyboardInput() {
+    window.addEventListener('keydown', (e) => {
+      // Ignore if typing in text inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      switch (e.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+          this.keys.forward = true;
+          break;
+        case 'KeyS':
+        case 'ArrowDown':
+          this.keys.backward = true;
+          break;
+        case 'KeyA':
+        case 'ArrowLeft':
+          this.keys.left = true;
+          break;
+        case 'KeyD':
+        case 'ArrowRight':
+          this.keys.right = true;
+          break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          this.keys.shift = true;
+          break;
+        case 'Space':
+          this.keys.jump = true;
+          break;
+        case 'KeyE':
+          this.handleInteraction();
+          break;
+        case 'Escape':
+          this.handleEscape();
+          break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW':
+        case 'ArrowUp':
+          this.keys.forward = false;
+          break;
+        case 'KeyS':
+        case 'ArrowDown':
+          this.keys.backward = false;
+          break;
+        case 'KeyA':
+        case 'ArrowLeft':
+          this.keys.left = false;
+          break;
+        case 'KeyD':
+        case 'ArrowRight':
+          this.keys.right = false;
+          break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          this.keys.shift = false;
+          break;
+        case 'Space':
+          this.keys.jump = false;
+          break;
+      }
+    });
+  }
+
+  handleInteraction() {
+    if (!this.activeTrigger) return;
+    audio.playClick();
+
+    switch (this.activeTrigger.action) {
+      case 'open_pc':
+        // Sit at desk and open programming academy & projects
+        this.player.setSitting(true, new THREE.Vector3(-1.7, 0, -0.6), Math.PI);
+        ui.switchTab('skills');
+        state.log("💻 Đang ngồi tại bàn máy tính Battlestation. Hãy chọn bài toán để giải hoặc code dự án!", "info");
+        break;
+
+      case 'sleep':
+        // Sleep on bed & restore energy
+        LifeManager.sleepFullNight();
+        break;
+
+      case 'read_book':
+        // Open library / shop books
+        ui.switchTab('shop');
+        state.log("📖 Mở tủ sách công nghệ: Chọn sách để đọc và tích lũy EXP!", "info");
+        break;
+
+      case 'talk_npc':
+        // Open NPC dialogue modal
+        ui.switchTab('overview');
+        state.log("💬 Đang đối thoại cùng Minh Mentor...", "info");
+        break;
+
+      case 'exit_room':
+        // Show campus exploration
+        ui.switchTab('quests');
+        state.log("🏛️ Bước ra khuôn viên trường Đại học (Campus). Lộ trình 10 chương rộng mở!", "success");
+        break;
+    }
+  }
+
+  handleEscape() {
+    if (this.player.isSitting) {
+      this.player.setSitting(false);
+    }
+    // Close any open modal
+    document.querySelectorAll('.fixed.inset-0').forEach(m => m.classList.add('hidden'));
+  }
+
+  checkTriggers() {
+    const playerPos = this.player.position;
+    const allTriggers = [
+      ...this.bedroom.getTriggers(),
+      this.npc.getTrigger()
+    ];
+
+    let foundTrigger = null;
+    for (const trig of allTriggers) {
+      const dist = playerPos.distanceTo(trig.position);
+      if (dist <= trig.radius) {
+        foundTrigger = trig;
+        break;
+      }
+    }
+
+    this.activeTrigger = foundTrigger;
+    if (this.promptElement) {
+      if (foundTrigger) {
+        this.promptElement.textContent = foundTrigger.prompt;
+        this.promptElement.classList.remove('hidden');
+      } else {
+        this.promptElement.classList.add('hidden');
+      }
+    }
+  }
+
+  onWindowResize() {
+    if (!this.renderer || !this.camera) return;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   }
 
   animate() {
+    if (!this.isRunning) return;
     requestAnimationFrame(() => this.animate());
-    if (this.deskGroup && !this.isDragging) {
-      // Gentle subtle breathing float
-      this.deskGroup.rotation.y += 0.002;
-    }
-    if (this.renderer && this.scene && this.camera) {
-      this.renderer.render(this.scene, this.camera);
-    }
-  }
 
-  renderFallback2D() {
-    if (!this.container) return;
-    this.container.innerHTML = `
-      <div class="w-full h-full flex flex-col items-center justify-center bg-slate-900/90 rounded-lg p-4 border border-cyan-500/30 text-center">
-        <div class="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 text-2xl mb-2">
-          💻
-        </div>
-        <div class="text-sm font-bold text-cyan-300">BATTLESTATION GÓC LÀM VIỆC</div>
-        <p class="text-xs text-slate-400 mt-1 max-w-xs">Phòng trọ sinh viên 12m² · Laptop Cũ · Bàn gỗ sinh viên</p>
-        <span class="text-[10px] text-cyan-500 mt-2 px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800">
-          WebGL Viewport Ready
-        </span>
-      </div>
-    `;
+    const delta = Math.min(this.clock.getDelta(), 0.1);
+
+    // 1. Update Camera Yaw in input
+    if (this.tpCamera) {
+      this.keys.cameraYaw = this.tpCamera.getYaw();
+    }
+
+    // 2. Update Player Movement & Collisions
+    const collisionBoxes = this.bedroom.getCollisionBoxes();
+    this.player.update(delta, this.keys, collisionBoxes);
+
+    // 3. Update Camera follow
+    this.tpCamera.update(delta);
+
+    // 4. Update Environment & NPC
+    this.bedroom.update(delta);
+    this.npc.update(delta, this.player.position);
+
+    // 5. Check Proximity Interaction Triggers
+    this.checkTriggers();
+
+    // 6. Footsteps procedural sound
+    if (this.player.isMoving && !this.player.isSitting) {
+      this.footstepTimer += delta;
+      const stepInterval = this.player.isRunning ? 0.28 : 0.42;
+      if (this.footstepTimer >= stepInterval) {
+        this.footstepTimer = 0;
+        audio.playKeypress(); // Procedural soft step click
+      }
+    } else {
+      this.footstepTimer = 0;
+    }
+
+    // 7. Render 3D Frame
+    this.renderer.render(this.scene, this.camera);
   }
 }
 
@@ -2778,6 +4016,17 @@ class UIManager {
 
   switchTab(tabId) {
     this.currentTab = tabId;
+    const menuModal = document.getElementById('game-menu-modal');
+
+    if (tabId === 'overview') {
+      if (menuModal) menuModal.classList.add('hidden');
+      if (window.game3D && window.game3D.player && window.game3D.player.isSitting) {
+        window.game3D.player.setSitting(false);
+      }
+    } else {
+      if (menuModal) menuModal.classList.remove('hidden');
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tabId);
     });
@@ -2785,6 +4034,31 @@ class UIManager {
       content.classList.toggle('hidden', content.id !== `tab-${tabId}`);
     });
     this.renderCurrentTab();
+  }
+
+  toggleMenuModal(tabId) {
+    const modal = document.getElementById('game-menu-modal');
+    if (!modal) return;
+    
+    if (tabId) {
+      this.switchTab(tabId);
+    } else {
+      if (modal.classList.contains('hidden')) {
+        this.switchTab('skills');
+      } else {
+        this.closeMenuModal();
+      }
+    }
+    audio.playClick();
+  }
+
+  closeMenuModal() {
+    const modal = document.getElementById('game-menu-modal');
+    if (modal) modal.classList.add('hidden');
+    if (window.game3D && window.game3D.player && window.game3D.player.isSitting) {
+      window.game3D.player.setSitting(false);
+    }
+    audio.playClick();
   }
 
   onStateChange(event, payload) {
@@ -3710,6 +4984,12 @@ class UIManager {
     if (closeCreate && createModal) {
       closeCreate.onclick = () => createModal.classList.add('hidden');
     }
+
+    const menuModal = document.getElementById('game-menu-modal');
+    const closeMenu = document.getElementById('close-menu-modal');
+    if (closeMenu && menuModal) {
+      closeMenu.onclick = () => this.closeMenuModal();
+    }
   }
 
   showToast(msg, type = 'info') {
@@ -3747,40 +5027,42 @@ const ui = new UIManager();
 
 
 
-let battlestation = null;
+let game3D = null;
 
 function bootGame() {
-  console.log('⚡ Initializing CODE LEGACY: From Zero To Legend...');
+  console.log('⚡ Initializing CODE LEGACY: 3D Career RPG...');
 
   // 1. Try to load existing save data
   SaveManager.load();
 
-  // 2. Initialize UI
+  // 2. Initialize UI & HUD Overlays
   ui.init();
 
-  // 3. Initialize 3D Battlestation Viewport
-  battlestation = new Battlestation3D('battlestation-3d-canvas');
-  battlestation.init();
+  // 3. Initialize Master 3D Engine (Fullscreen Three.js World)
+  try {
+    if (typeof THREE !== 'undefined') {
+      game3D = new Game3D('game-canvas');
+      game3D.init();
+      window.game3D = game3D;
+    } else {
+      console.warn("Three.js not found, fallback to 2D HUD");
+    }
+  } catch (err) {
+    console.error("3D Engine init error:", err);
+  }
 
   // 4. Start Game Time Loop
   timeManager.start();
 
-  // 5. Setup Header Controls (Save, Load, Export, Audio Toggle)
-  setupHeaderControls();
+  // 5. Setup Header & Shortcut Controls
+  setupControls();
 
   // 6. Setup Auto-Save every 30 seconds
   setInterval(() => {
     SaveManager.save();
   }, 30000);
 
-  // Re-render 3D setup if equipment changes
-  state.subscribe((event) => {
-    if (battlestation && event === 'update') {
-      battlestation.updateGearMeshes();
-    }
-  });
-
-  state.log('🚀 Chào mừng đến với CODE LEGACY: From Zero To Legend. Mọi hệ thống đã sẵn sàng!', 'success');
+  state.log('🚀 CODE LEGACY 3D sẵn sàng! Nhấn [WASD] để di chuyển, [E] để tương tác máy tính, [K] xem kỹ năng!', 'success');
 }
 
 if (document.readyState === 'loading') {
@@ -3789,7 +5071,7 @@ if (document.readyState === 'loading') {
   bootGame();
 }
 
-function setupHeaderControls() {
+function setupControls() {
   const saveBtn = document.getElementById('btn-manual-save');
   const exportBtn = document.getElementById('btn-export-save');
   const importInput = document.getElementById('input-import-save');
@@ -3847,5 +5129,28 @@ function setupHeaderControls() {
       }
     };
   }
+
+  // RPG Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    switch (e.code) {
+      case 'KeyK': // Skills
+        ui.toggleMenuModal('skills');
+        break;
+      case 'KeyJ': // Quests
+        ui.toggleMenuModal('quests');
+        break;
+      case 'KeyC': // Character / Career
+        ui.toggleMenuModal('career');
+        break;
+      case 'KeyI': // Inventory / Shop
+        ui.toggleMenuModal('shop');
+        break;
+      case 'KeyP': // Portfolio
+        ui.toggleMenuModal('portfolio');
+        break;
+    }
+  });
 }
 })();
