@@ -98,6 +98,17 @@ class TestCodeLegacyQualityAssurance(unittest.TestCase):
         self.assertIn("pitchVC", content)
         self.assertIn("hireEmployee", content)
 
+    def test_bundle_js_standalone_integrity(self):
+        """Verify that bundle.js exists, is non-empty, and included in index.html for zero-CORS play."""
+        bundle_file = os.path.join(PROJECT_ROOT, "bundle.js")
+        self.assertTrue(os.path.exists(bundle_file), "bundle.js must exist for zero-CORS browser execution")
+        self.assertGreater(os.path.getsize(bundle_file), 50000, "bundle.js must contain all bundled modules")
+        
+        index_file = os.path.join(PROJECT_ROOT, "index.html")
+        with open(index_file, "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn('src="bundle.js"', html, "index.html must reference bundle.js to avoid CORS blocks on file://")
+
     def test_index_html_has_all_tab_targets_and_modals(self):
         """Verify index.html contains all 10 tab buttons, tab contents, and 3 critical modals."""
         index_file = os.path.join(PROJECT_ROOT, "index.html")
@@ -118,3 +129,4 @@ class TestCodeLegacyQualityAssurance(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

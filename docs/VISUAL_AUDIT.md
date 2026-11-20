@@ -33,3 +33,4 @@
 1. **Typography:** Kết hợp font sans-serif hiện đại `Plus Jakarta Sans` cho tiêu đề/văn bản và `JetBrains Mono` cho các con số, mã code, thời gian và chỉ số tài chính.
 2. **Glassmorphism:** Sử dụng `backdrop-filter: blur(16px)` tạo chiều sâu nhiều lớp không gian, tránh cảm giác phẳng lì đơn điệu của các trang web thông thường.
 3. **Phản hồi tương tác (Micro-interactions):** Mọi nút bấm đều có hiệu ứng đổi màu, đổ bóng neon nhẹ và âm thanh phản hồi tức thì qua Web Audio API.
+

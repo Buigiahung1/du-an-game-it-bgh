@@ -18,3 +18,4 @@
 
 4. **Đóng gói Ứng dụng Desktop Đa nền tảng (Electron / Tauri Package):**
    - Đóng gói toàn bộ mã nguồn web hiện tại thành file cài đặt `.exe` (Windows) và `.dmg` (macOS) với hiệu năng cao và khả năng chơi offline 100%.
+

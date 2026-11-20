@@ -71,3 +71,4 @@
 - Kiểm tra định giá Startup, MRR & Pitch VC: **PASSED**.
 - Kiểm tra phần cứng, độ hiếm và buffs: **PASSED**.
 - Kiểm tra liên kết giao diện HTML và DOM elements: **PASSED**.
+

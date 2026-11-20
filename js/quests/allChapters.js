@@ -91,3 +91,4 @@ export const ALL_CHAPTERS = {
     rewardSummary: 'Danh hiệu TECH LEGEND - Huyền Thoại Bất Tử'
   }
 };
+

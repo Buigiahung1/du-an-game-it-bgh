@@ -89,3 +89,4 @@ export class CharacterCreationManager {
     return true;
   }
 }
+

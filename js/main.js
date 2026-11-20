@@ -9,7 +9,7 @@ import { Customizer } from './character/customizer.js';
 
 let battlestation = null;
 
-window.addEventListener('DOMContentLoaded', () => {
+function bootGame() {
   console.log('⚡ Initializing CODE LEGACY: From Zero To Legend...');
 
   // 1. Try to load existing save data
@@ -40,8 +40,14 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  state.log('🚀 Chào mừng đến với CODE LEGACY: From Zero To Legend (V1 Prototype). Mọi hệ thống đã sẵn sàng!', 'success');
-});
+  state.log('🚀 Chào mừng đến với CODE LEGACY: From Zero To Legend. Mọi hệ thống đã sẵn sàng!', 'success');
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootGame);
+} else {
+  bootGame();
+}
 
 function setupHeaderControls() {
   const saveBtn = document.getElementById('btn-manual-save');
@@ -102,4 +108,3 @@ function setupHeaderControls() {
     };
   }
 }
-
